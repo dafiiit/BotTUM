@@ -41,6 +41,8 @@ class IMU_9DOF : public IMU_6DOF {
         IMU_9DOF(double x, double y, double z, double gyro_x, double gyro_y, double gyro_z, double mag_x, double mag_y, double mag_z, , double pin_SCL, double pin_SCA);
 };
 #endif
+
+
 //implementierung
 // Hier implementieren wir die Klasse IMU mit den privaten Attributen x, y und z
 const int IMU_pin_SCL = 22;
