@@ -1,3 +1,4 @@
+#include "datentypen.h"
 //deklaration
 #ifndef IMU_H
 #define IMU_H

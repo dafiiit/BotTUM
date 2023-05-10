@@ -1,3 +1,5 @@
+#include "datentypen.h"
+
 //deklaration
 #ifndef HALLSENSOR_H
 #define HALLSENSOR_H
