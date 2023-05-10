@@ -1,12 +1,13 @@
 //Dies ist das Hauptprogramm für die Ansteuerung des Quadrats
 #include <iostream>
+#include <cmath>
+#include <Wire.h>
+#include <tgmath.h>
+
 #include "datentypen.h"
 #include "hall.cpp"
 #include "imu.h"
 #include "quadrat.h"
-#include <cmath>
-#include <Wire.h>
-#include <tgmath.h>
 
 void setup(){
   q.HALLSENSOR.hall_setup()
