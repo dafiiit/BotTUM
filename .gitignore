@@ -1,3 +1,3 @@
 //hier kommen Filenamen rein, die nicht in die Git-Repo sollen
-//z.B. Systemdateien oder Tests
+//z.B. Systemdateien wie .DS_Store (wird auf Mac automatisch angelegt)
 .DS_Store
