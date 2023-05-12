@@ -1,74 +1,57 @@
 #include "datentypen.h"
 
+//Datentypen nochmal überprüfen und Sinnvoll anpassen (Rückgabedatentypen von Funktionen) und so
+
 //deklaration
 #ifndef HALLSENSOR_H
 #define HALLSENSOR_H
 class HALLSENSOR {
   private: 
-    double HallSensor_phi_p_s;
-    int HallSensor_pin;
-    unsigned long HallSensor_previous_time = 0;
+    volatile bool HallSensor_state = false;   //Variable for reading the hall status
+    int HallSensor_pin = 19;                  //beim ESP32 Interrupt pin = Physikalischer Pin
     int HallSensor_anz_magneten = 2;
+    double HallSensor_rpm = 0;
+    double HallSensor_PhiPS = 0;
+    volatile double time_trig = 0;
+    volatile double time_now = 0;
+    volatile float time_delta = 0;
+    int HallSensor_Abtastrate = 115200;
   
   public:
-    HALLSENSOR(double HallSensor_phi_p_s, int HallSensor_pin);
+    HALLSENSOR();
     void hall_setup();
-    double getHallPhiPS();
-    
+    double get_hall_PhiPS();  
+    double get_hall_RPM();     
   private:
-    static void pin_ISR();
-    double calculateAngularVelocity(int x, double timeInSeconds);
+    static void hall_ISR();
 };
 #endif
-//implementierung
-// Hier implementieren wir die Klasse HallSensor
-int HallSensor_pin = 3; //Sensor pin
-volatile int HallSensor_state = 0;   //Variable for reading the hall status
-int HallSensor_interrupt_pin = 0;    //Nicht der Physikalische Pin. Muss man nachschauen.
-int HallSensor_anz_magneten = 2;
 
-HALLSENSOR::HALLSENSOR(double HallSensor_phi_p_s, int HallSensor_pin) {
-  this->HallSensor_phi_p_s = HallSensor_phi_p_s;
-  this->HallSensor_pin = HallSensor_pin;
-}
+HALLSENSOR::HALLSENSOR() {}
+
 void HALLSENSOR::hall_setup(){
   pinMode(HallSensor_pin, INPUT);
-  attachInterrupt(digitalPinToInterrupt(HallSensor_interrupt_pin),pin_ISR,FALLING);    
+  Serial.begin(HallSensor_Abtastrate);
+  attachInterrupt(digitalPinToInterrupt(HallSensor_pin), hall_ISR, RISING); 
 }
-void HALLSENSOR::pin_ISR(){       //Interrupt Service Routine
-  //HallSensor_state = digitalRead(HallSensor_pin);
-  getHallPhiPS();     //berechnet die Drehzahl
+void HALLSENSOR::hall_ISR(){       
+  HallSensor_state = !HallSensor_state;
+  time_delta = time_now - time_trig;
+  time_trig = time_now;
 }
-double HALLSENSOR::getHallPhiPS(){
-
-  unsigned long current_time = micros(); // Aktuelle Zeit ermitteln
-  unsigned long time_difference = current_time - HallSensor_previous_time; // Zeitdifferenz berechnen
-  HallSensor_previous_time = current_time; // Setze den vorherigen Zeitpunkt auf die aktuelle Zeit
-
-  std::vector<int> values(5); // Ein Vector von 5 ganzzahligen Werten
-  // Lösche das letzte Element
-  values.pop_back();
-  // Verschiebe jedes Element um eine Position nach hinten
-  for (int i = 3; i >= 0; i--) {
-    values[i + 1] = values[i];
+double HALLSENSOR::get_hall_PhiPS(){
+  time_now = millis();
+  if (time_delta)
+  {
+    double HallSensor_PhiPS = (1 /(time_delta / 1000))/HallSensor_anz_magneten;
+    return HallSensor_PhiPS;
   }
-  // Hänge das neue Element an die erste Position an
-  values[0] = microseconds;
-
-  //berechne den Median der Zeiten
-  std::vector<int> sortedVec = values;
-  std::sort(sortedVec.begin(), sortedVec.end());
-  int median;
-  if (sortedVec.size() % 2 == 0) {
-    median = (sortedVec[sortedVec.size()/2 - 1] + sortedVec[sortedVec.size()/2]) / 2;
-  } else {
-    median = sortedVec[sortedVec.size()/2];
-  }
-  //Wandle die Periodenzeit in die Drehgeschwindigkeit um
-  HallSensor.phi_p_s = calculateAngularVelocity(Hall_anz_magneten, median) 
 }
-double HALLSENSOR::calculateAngularVelocity(int x, double timeInSeconds) {
-  double timePerRevolution = timeInSeconds / x;
-  double angularVelocity = 1.0 / timePerRevolution;
-  return angularVelocity;
+double HALLSENSOR::get_hall_RPM(){
+  time_now = millis();
+  if (time_delta)
+  {
+    HallSensor_rpm = (1 /( (time_delta / 1000) * 60) )/HallSensor_anz_magneten;
+    return HallSensor_rpm;
+  }
 }
