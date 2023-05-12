@@ -1,7 +1,5 @@
 #include "datentypen.h"
 
-//Datentypen nochmal überprüfen und Sinnvoll anpassen (Rückgabedatentypen von Funktionen) und so
-
 //deklaration
 #ifndef HALLSENSOR_H
 #define HALLSENSOR_H
@@ -10,18 +8,18 @@ class HALLSENSOR {
     volatile bool HallSensor_state = false;   //Variable for reading the hall status
     int HallSensor_pin = 19;                  //beim ESP32 Interrupt pin = Physikalischer Pin
     int HallSensor_anz_magneten = 2;
-    double HallSensor_rpm = 0;
-    double HallSensor_PhiPS = 0;
+    float HallSensor_rpm = 0;
+    float HallSensor_PhiPS = 0;
     volatile double time_trig = 0;
     volatile double time_now = 0;
-    volatile float time_delta = 0;
+    volatile double time_delta = 0;
     int HallSensor_Abtastrate = 115200;
   
   public:
     HALLSENSOR();
     void hall_setup();
-    double get_hall_PhiPS();  
-    double get_hall_RPM();     
+    float get_hall_PhiPS();  
+    float get_hall_RPM();     
   private:
     static void hall_ISR();
 };
@@ -39,15 +37,15 @@ void HALLSENSOR::hall_ISR(){
   time_delta = time_now - time_trig;
   time_trig = time_now;
 }
-double HALLSENSOR::get_hall_PhiPS(){
+float HALLSENSOR::get_hall_PhiPS(){
   time_now = millis();
   if (time_delta)
   {
-    double HallSensor_PhiPS = (1 /(time_delta / 1000))/HallSensor_anz_magneten;
+    HallSensor_PhiPS = (1 /(time_delta / 1000))/HallSensor_anz_magneten;
     return HallSensor_PhiPS;
   }
 }
-double HALLSENSOR::get_hall_RPM(){
+float HALLSENSOR::get_hall_RPM(){
   time_now = millis();
   if (time_delta)
   {
