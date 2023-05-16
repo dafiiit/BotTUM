@@ -1,5 +1,5 @@
 # Dies ist die Dokumentation zu dem Code des Quadrats
-##Generelles
+## Generelles
 Es wäre super, wenn wir unseren Prozess so gut dokumentieren würden, dass andere ohne großen Aufwand darauf aufbauen können. Daher wurden noch die Kategorien CAD Files und simulation_matlab hinzugefügt. 
 ## Code Stuktur
 Die Funkitonalität des Codes ist wie folgt unterteilt:
