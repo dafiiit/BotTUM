@@ -3,6 +3,7 @@
 #include <cmath>
 //#include <Wire.h>
 #include <tgmath.h>
+#include <Serial.h>
 
 #include "datentypen.h"
 #include "hall.h"
@@ -19,9 +20,12 @@ void setup(){
 
 void loop() {
 
-  float rpm = hallSensor.get_hall_RPM();   // RPM abrufen
+  float rpm = hallSensor.get_hall_RPM();      // RPM abrufen
+  float phiPS = hallSensor.get_hall_PhiPS();  // PhiPS abrufen
+
+  Serial.print("PhiPS: ");
+  Serial.println(phiPS);
   Serial.print("RPM: ");
   Serial.println(rpm);   // RPM ausgeben
 
-  return 0;
 }
