@@ -104,74 +104,75 @@ void setup(void)
     Serial.println("");
     delay(100);
 }
-void loop()
-{
-    /* Get new sensor events with the readings */
-    sensors_event_t a, g, temp;
-    mpu.getEvent(&a, &g, &temp);
+void loop() {
+  /* Get new sensor events with the readings */
+  sensors_event_t a, g, temp;
+  mpu.getEvent(&a, &g, &temp);
 
-    /* Integrate acceleration to obtain velocity */
-    unsigned long currentTime = millis();
-    float deltaTime = (currentTime - lastUpdateTime) / 1000.0; // Convert milliseconds to seconds
-    lastUpdateTime = currentTime;
+  /* Integrate acceleration to obtain velocity */
+  unsigned long currentTime = millis();
+  float deltaTime = (currentTime - lastUpdateTime) / 1000.0; // Convert milliseconds to seconds
+  lastUpdateTime = currentTime;
 
-    float prevVelocityX = velocityX;
-    accelerationX = a.acceleration.x;
-    velocityX += (accelerationX + prevAccelerationX) * deltaTime / 2.0;
-    positionX += (velocityX + prevVelocityX) * deltaTime / 2.0;
+  static float prevVelocityX = 0;
+  float prevAccelerationX = accelerationX;
+  accelerationX = a.acceleration.x;
+  velocityX += (accelerationX + prevAccelerationX) * deltaTime / 2.0;
+  positionX += (velocityX + prevVelocityX) * deltaTime / 2.0;
+  prevVelocityX = velocityX;
 
-    float prevVelocityY = velocityY;
-    accelerationY = a.acceleration.y;
-    velocityY += (accelerationY + prevAccelerationY) * deltaTime / 2.0;
-    positionY += (velocityY + prevVelocityY) * deltaTime / 2.0;
+  static float prevVelocityY = 0;
+  float prevAccelerationY = accelerationY;
+  accelerationY = a.acceleration.y;
+  velocityY += (accelerationY + prevAccelerationY) * deltaTime / 2.0;
+  positionY += (velocityY + prevVelocityY) * deltaTime / 2.0;
+  prevVelocityY = velocityY;
 
-    float prevVelocityZ = velocityZ;
-    accelerationZ = a.acceleration.z;
-    velocityZ += (accelerationZ + prevAccelerationZ) * deltaTime / 2.0;
-    positionZ += (velocityZ + prevVelocityZ) * deltaTime / 2.0;
+  static float prevVelocityZ = 0;
+  float prevAccelerationZ = accelerationZ;
+  accelerationZ = a.acceleration.z;
+  velocityZ += (accelerationZ + prevAccelerationZ) * deltaTime / 2.0;
+  positionZ += (velocityZ + prevVelocityZ) * deltaTime / 2.0;
+  prevVelocityZ = velocityZ;
 
-    /* Update previous values */
-    prevAccelerationX = accelerationX;
-    prevAccelerationY = accelerationY;
-    prevAccelerationZ = accelerationZ;
+  /* Print out the values */
+  Serial.print("Acceleration X: ");
+  Serial.print(accelerationX);
+  Serial.print(", Y: ");
+  Serial.print(accelerationY);
+  Serial.print(", Z: ");
+  Serial.print(accelerationZ);
+  Serial.println(" m/s^2");
 
-    /* Print out the values */
-    Serial.print("Acceleration X: ");
-    Serial.print(accelerationX);
-    Serial.print(", Y: ");
-    Serial.print(accelerationY);
-    Serial.print(", Z: ");
-    Serial.print(accelerationZ);
-    Serial.println(" m/s^2");
+  Serial.print("Velocity X: ");
+  Serial.print(velocityX);
+  Serial.print(", Y: ");
+  Serial.print(velocityY);
+  Serial.print(", Z: ");
+  Serial.print(velocityZ);
+  Serial.println(" m/s");
 
-    Serial.print("Velocity X: ");
-    Serial.print(velocityX);
-    Serial.print(", Y: ");
-    Serial.print(velocityY);
-    Serial.print(", Z: ");
-    Serial.print(velocityZ);
-    Serial.println(" m/s");
+  Serial.print("Position X: ");
+  Serial.print(positionX);
+  Serial.print(", Y: ");
+  Serial.print(positionY);
+  Serial.print(", Z: ");
+  Serial.print(positionZ);
+  Serial.println(" m");
 
-    Serial.print("Position X: ");
-    Serial.print(positionX);
-    Serial.print(", Y: ");
-    Serial.print(positionY);
-    Serial.print(", Z: ");
-    Serial.print(positionZ);
-    Serial.println(" m");
+  Serial.print("Rotation X: ");
+  Serial.print(g.gyro.x);
+  Serial.print(", Y: ");
+  Serial.print(g.gyro.y);
+  Serial.print(", Z: ");
+  Serial.print(g.gyro.z);
+  Serial.println(" rad/s");
 
-    Serial.print("Rotation X: ");
-    Serial.print(g.gyro.x);
-    Serial.print(", Y: ");
-    Serial.print(g.gyro.y);
-    Serial.print(", Z: ");
-    Serial.print(g.gyro.z);
-    Serial.println(" rad/s");
+  Serial.print("Temperature: ");
+  Serial.print(temp.temperature);
+  Serial.println(" degC");
 
-    Serial.print("Temperature: ");
-    Serial.print(temp.temperature);
-    Serial.println(" degC");
-
-    Serial.println("");
-    delay(500);
+  Serial.println("");
+  delay(500);
 }
+
