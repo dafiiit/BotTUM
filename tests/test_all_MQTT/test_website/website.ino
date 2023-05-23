@@ -2,9 +2,9 @@
 #include <PubSubClient.h>
 #include "secure.h"
 
-const char *mqttServer = "IP_ADRESSE_ODER_HOSTNAME_DES_BROKERS";
+const char *mqttServer = "test.mosquitto.org";
 const int mqttPort = 1883;
-const char *mqttTopic = "DEIN_MQTT_TOPIC";
+const char *mqttTopic = "/RoboTUM";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
