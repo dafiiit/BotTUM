@@ -87,6 +87,7 @@ classDiagram
         - double gyro_x
         - double gyro_y
         - double gyro_z
+        - IMU_POSITION imu_position
         + IMU_6DOF(...)
     }
 
@@ -97,6 +98,13 @@ classDiagram
         + IMU_9DOF(...)
     }
 
+    class IMU_POSITION{
+        %%positionierung der IMU6DOF/9DOF relativ zum Zentrum des Würfels
+        - double x
+        - double y
+        - double z
+        +get_angle(ax,ay,az,gx,gy,gz)
+    }
     
 
     IMU --> IMU_6DOF 
@@ -107,5 +115,6 @@ classDiagram
     ROUTENELEMENT --> ROUTE
     ROUTE --> Quadrat
     POSITION --> Quadrat
+    IMU_POSITION --> IMU_6DOF
 
 ```
