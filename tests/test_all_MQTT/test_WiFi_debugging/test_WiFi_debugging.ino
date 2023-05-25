@@ -40,7 +40,7 @@ void loop() {
       Serial.print(" (");
       Serial.print(WiFi.RSSI(i));
       Serial.print(")");
-      Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_WPA2_ENTERPRISE)?" ":"*");
+      Serial.println((WiFi.encryptionType(i) == WIFI_AUTH_OPEN)?" ":"*");
       delay(10);
     }
   }

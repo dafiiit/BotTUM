@@ -6,13 +6,14 @@
 
 const char* mqttServer = "test.mosquitto.org";
 const int mqttPort = 1883;
-const char* mqttTopic = "/RoboTUM/test1";
+const char* mqttTopic = "RoboTUM/steuerung";
 const char* mqttClientId = "ESP32Client";
 
 WiFiClient espClient;
 PubSubClient client(espClient);
 
 void setup() {
+
   Serial.begin(115200);
 
   // Connect to Wi-Fi
@@ -41,8 +42,9 @@ void loop() {
   client.loop();
 
   // Publish a test message
-  String message = "Hello from ESP32";
+  String message = "vorwärts";
   client.publish(mqttTopic, message.c_str());
+ // client.callback("RoboTUM/steuerung")
   Serial.println("Message published");
 
   delay(5000);  // Wait 5 seconds before publishing the next message

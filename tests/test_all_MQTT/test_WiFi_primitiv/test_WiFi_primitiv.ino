@@ -10,7 +10,7 @@
 #include <WiFi.h>
 #include "secure.h"
 
-void wifi_setup() {
+void setup() {
   Serial.begin(115200);
   
   // Connect to Wi-Fi
@@ -22,6 +22,10 @@ void wifi_setup() {
   }
   
   Serial.println("Connected to WiFi");
-  Serial.print("IP Address: ");
+  Serial.print("IP Address: "); 
   Serial.println(WiFi.localIP());
+}
+
+void loop(){
+
 }
