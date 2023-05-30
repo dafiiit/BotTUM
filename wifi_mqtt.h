@@ -1,9 +1,10 @@
+//Diese Datei funktioniert so, daher eher nicht ändern
+
 #ifndef MQTT_HELPER_H
 #define MQTT_HELPER_H
 
 #include <WiFi.h>
 #include <PubSubClient.h>
-#include "secure.h"
 
 class MQTTHelper {
 public:
@@ -36,41 +37,9 @@ public:
       reconnect();
     }
     client.loop();
-
-    // Publish a test message
-    //String message = "vorwärts";
-    //client.publish(mqttTopic, message.c_str());
-    // client.callback("RoboTUM/steuerung")
-    //Serial.println("Message published");
-
-    //delay(5000);  // Wait 5 seconds before publishing the next message
   }
 
-private:
-  const char* mqttServer = "test.mosquitto.org";
-  const int mqttPort = 1883;
-  const char* mqttTopic = "RoboTUM/steuerung";
-  const char* mqttClientId = "ESP32Client";
-
-  WiFiClient espClient;
-  PubSubClient client;
-
-  void reconnect() {
-    while (!client.connected()) {
-      Serial.println("Connecting to MQTT broker...");
-      if (client.connect(mqttClientId)) {
-        Serial.println("Connected to MQTT broker");
-        client.subscribe(mqttTopic);  // Subscribe to the topic (optional)
-      } else {
-        Serial.print("Failed, rc=");
-        Serial.print(client.state());
-        Serial.println(" Retrying in 5 seconds...");
-        delay(5000);
-      }
-    }
-  }
-
-  void callback(char* topic, byte* payload, unsigned int length) {
+  static void callback(char* topic, byte* payload, unsigned int length) {
     // Handle incoming messages
     String message = "";
     for (int i = 0; i < length; i++) {
@@ -78,6 +47,36 @@ private:
     }
     Serial.print("Received message: ");
     Serial.println(message);
+  }
+
+  void publishMessage(const char* topic, const char* message) {
+    if (client.connected()) {
+      client.publish(topic, message);
+    }
+  }
+
+private:
+  const char* mqttServer = "test.mosquitto.org";
+  const int mqttPort = 1883; 
+  const char* mqttClientId = "ESP32Client";
+  const char* ssid = "DaSpot";
+  const char* password = "david2003";
+
+  WiFiClient espClient;
+  PubSubClient client;
+  void reconnect() {
+    while (!client.connected()) {
+    Serial.println("Connecting to MQTT broker...");
+    if (client.connect(mqttClientId)) {
+      Serial.println("Connected to MQTT broker");
+      //client.subscribe(mqttTopic);  // Subscribe to the topic (optional)
+    } else {
+      Serial.print("Failed, rc=");
+      Serial.print(client.state());
+      Serial.println(" Retrying in 5 seconds...");
+      delay(5000);
+    }
+    }
   }
 };
 
