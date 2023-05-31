@@ -12,7 +12,7 @@ class MQTTHelper {
 public:
   MQTTHelper() : client(espClient) {}
   void setup() {
-    Serial.begin(115200);
+    //Serial.begin(115200);
 
     // Connect to Wi-Fi
     WiFi.begin(ssid, password);
@@ -39,13 +39,9 @@ public:
       reconnect();
     }
     client.loop();
-    //String message = "vorwärts";
-    //client.publish(mqttTopic, message.c_str());
-    //client.callback("RoboTUM/steuerung")
-    //Serial.println("Message published");
-    //delay(5000);  // Wait 5 seconds before publishing the next message
   }
-
+  
+/*
   static void callback(char* topic, byte* payload, unsigned int length) {
     // Handle incoming messages
     String message = "";
@@ -55,12 +51,14 @@ public:
     Serial.print("Received message: ");
     Serial.println(message);
   }
+*/
 
   void publishMessage(const char* topic, const char* message) {
     if (client.connected()) {
       client.publish(topic, message);
     }
   }
+
 
 private:
   const char* mqttServer = "test.mosquitto.org";
@@ -69,6 +67,30 @@ private:
 
   WiFiClient espClient;
   PubSubClient client;
+/*
+  static void staticCallbackWrapper(char* topic, byte* payload, unsigned int length){
+    MqttClient* instance = reinterpret_cast<MqttClient*>(_client.getCallbackContext());
+    instance->callback(topic, payload, length);
+  }
+*/
+
+/*
+  void callback(char* topic, byte* payload, unsigned int length){
+    Serial.print("Empfangene Nachricht auf Topic: ");
+    Serial.println(topic);
+
+    // Payload in einen String konvertieren
+    String message = "";
+    for (unsigned int i = 0; i < length; i++) {
+      message += (char)payload[i];
+    }
+
+    // Empfangene Nachricht ausgeben
+    Serial.print("Empfangene Nachricht: ");
+    Serial.println(message);
+  }
+*/  
+
   void reconnect() {
     while (!client.connected()) {
     Serial.println("Connecting to MQTT broker...");
@@ -84,5 +106,16 @@ private:
     }
   }
 };
+
+// Define the free function outside the class
+void callback(char* topic, byte* payload, unsigned int length) {
+  // Handle incoming messages
+  String message = "";
+  for (int i = 0; i < length; i++) {
+    message += (char)payload[i];
+  }
+  Serial.print("Received message: ");
+  Serial.println(message);
+}
 
 #endif

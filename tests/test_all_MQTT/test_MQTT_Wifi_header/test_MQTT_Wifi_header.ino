@@ -4,8 +4,10 @@
 MQTTHelper mqttHelper;
 
 void setup() { 
+  Serial.begin(115200);
   mqttHelper.setup();
-  
+  //mqttClient.setCallback(callback);
+
 }
 float lastPublishTime = 0;
 void loop() {
@@ -17,3 +19,5 @@ void loop() {
     lastPublishTime = millis(); // Aktualisiere den Zeitpunkt des letzten Publish
   }
 }
+
+
