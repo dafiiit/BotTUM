@@ -12,12 +12,11 @@ class MQTTHelper {
 public:
   MQTTHelper() : client(espClient) {}
   void setup() {
-    //Serial.begin(115200);
-
-    // Connect to Wi-Fi
     WiFi.begin(ssid, password);
+    // Connect to Wi-Fi
     while (WiFi.status() != WL_CONNECTED) {
-      delay(1000);
+      //WiFi.begin(ssid, password);
+      delay(2000);
       Serial.println("Connecting to WiFi...");
     }
     Serial.println("Connected to WiFi");
@@ -40,18 +39,6 @@ public:
     }
     client.loop();
   }
-  
-/*
-  static void callback(char* topic, byte* payload, unsigned int length) {
-    // Handle incoming messages
-    String message = "";
-    for (int i = 0; i < length; i++) {
-      message += (char)payload[i];
-    }
-    Serial.print("Received message: ");
-    Serial.println(message);
-  }
-*/
 
   void publishMessage(const char* topic, const char* message) {
     if (client.connected()) {
@@ -67,36 +54,18 @@ private:
 
   WiFiClient espClient;
   PubSubClient client;
-/*
-  static void staticCallbackWrapper(char* topic, byte* payload, unsigned int length){
-    MqttClient* instance = reinterpret_cast<MqttClient*>(_client.getCallbackContext());
-    instance->callback(topic, payload, length);
-  }
-*/
-
-/*
-  void callback(char* topic, byte* payload, unsigned int length){
-    Serial.print("Empfangene Nachricht auf Topic: ");
-    Serial.println(topic);
-
-    // Payload in einen String konvertieren
-    String message = "";
-    for (unsigned int i = 0; i < length; i++) {
-      message += (char)payload[i];
-    }
-
-    // Empfangene Nachricht ausgeben
-    Serial.print("Empfangene Nachricht: ");
-    Serial.println(message);
-  }
-*/  
 
   void reconnect() {
     while (!client.connected()) {
-    Serial.println("Connecting to MQTT broker...");
+    //Serial.println("Connecting to MQTT broker...");
     if (client.connect(mqttClientId)) {
-      Serial.println("Connected to MQTT broker");
-      client.subscribe("RoboTUM/steuerung");  // Subscribe to the topic (optional)
+      //Serial.println("Connected to MQTT broker");
+
+      // hier allen Toppics subscriben
+      client.subscribe("RoboTUM/steuerung");  
+      client.subscribe("RoboTUM/pid_values");
+      client.subscribe("RoboTUM/on_off");
+
     } else {
       Serial.print("Failed, rc=");
       Serial.print(client.state());
