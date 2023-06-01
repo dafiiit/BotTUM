@@ -5,6 +5,7 @@ const int MPU = 0x68; // MPU6050 I2C address
 float AccX, AccY, AccZ;
 float GyroX, GyroY, GyroZ;
 float accAngleX, accAngleY, gyroAngleX, gyroAngleY, gyroAngleZ;
+float gyroAngleX_map, gyroAngleY_map;
 float roll, pitch, yaw;
 float elapsedTime, currentTime, previousTime;
 int c = 0;
@@ -40,9 +41,9 @@ void setup() {
     Wire.write(0x43);
     Wire.endTransmission(false);
     Wire.requestFrom(MPU, 6, true);
-    GyroX = (Wire.read() << 8 | Wire.read()) / 131;
-    GyroY = (Wire.read() << 8 | Wire.read()) / 131;
-    GyroZ = (Wire.read() << 8 | Wire.read()) / 131;
+    GyroX = (Wire.read() << 8 | Wire.read()) / 131.0;
+    GyroY = (Wire.read() << 8 | Wire.read()) / 131.0;
+    GyroZ = (Wire.read() << 8 | Wire.read()) / 131.0;
 
     gyroBiasX += GyroX;
     gyroBiasY += GyroY;
@@ -56,19 +57,15 @@ void setup() {
   gyroBiasZ /= numSamples;
 } 
 void loop() {
-  previousTime = currentTime;
-  currentTime = millis();
-  elapsedTime = (currentTime - previousTime) / 1000.0;
-
   // Read accelerometer data
   Wire.beginTransmission(MPU);
   Wire.write(0x3B);
   Wire.endTransmission(false);
   Wire.requestFrom(MPU, 6, true);
 
-  AccX = (Wire.read() << 8 | Wire.read());
-  AccY = (Wire.read() << 8 | Wire.read());
-  AccZ = (Wire.read() << 8 | Wire.read());
+  AccX = (Wire.read() << 8 | Wire.read())/4096.0;
+  AccY = (Wire.read() << 8 | Wire.read())/4096.0;
+  AccZ = (Wire.read() << 8 | Wire.read())/4096.0;
 
   // Convert accelerometer values to degrees
   accAngleX = atan(AccY / sqrt(pow(AccX, 2) + pow(AccZ, 2))) * 180.0 / PI;
@@ -79,18 +76,23 @@ void loop() {
   Wire.write(0x43);
   Wire.endTransmission(false);
   Wire.requestFrom(MPU, 6, true);
-  GyroX = (Wire.read() << 8 | Wire.read()) / 131;
-  GyroY = (Wire.read() << 8 | Wire.read()) / 131;
-  GyroZ = (Wire.read() << 8 | Wire.read()) / 131;
+  GyroX = (Wire.read() << 8 | Wire.read()) / 131.0;
+  GyroY = (Wire.read() << 8 | Wire.read()) / 131.0;
+  GyroZ = (Wire.read() << 8 | Wire.read()) / 131.0;
 
   // Apply gyro bias compensation
   GyroX -= gyroBiasX;
   GyroY -= gyroBiasY;
   GyroZ -= gyroBiasZ;
 
+  previousTime = currentTime;
+  currentTime = millis();
+  elapsedTime = (currentTime - previousTime) / 1000.0;
   // Update gyro angles
   gyroAngleX += GyroX * elapsedTime;
+  gyroAngleX_map=gyroAngleX*4;
   gyroAngleY += GyroY * elapsedTime;
+  gyroAngleY_map=gyroAngleY*4;
   yaw += GyroZ * elapsedTime;
 
   // Complementary filter - combine accelerometer and gyro angles
