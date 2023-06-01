@@ -10,13 +10,10 @@ class IMU_3DOF {
     float acc_x, acc_y, acc_z = 0.0;
     float acc_angle_x, acc_angle_y, acc_angle_z = 0.0; 
     float roll_x, pitch_y, yaw_z = 0.0; // was ist der Unterschied zum Winkel obendrüber?
-    double pin_scl;
-    double pin_sda;
     float elapsed_time, current_time, previous_time = 0;
-    int c = 0; // bitte hilfreicher bennen
-  
+
   public:
-    IMU_3DOF(double pin_scl, double pin_sda): pin_scl(pin_scl), pin_sda(pin_sda) {}; // Konstruktor
+    IMU_3DOF(): {}; // Konstruktor
     void setup(){
       Wire.begin();
       Wire.beginTransmission(mpu);
@@ -53,8 +50,8 @@ class IMU_3DOF {
       acc_z = (Wire.read() << 8 | Wire.read());
 
       // Convert accelerometer values to degrees
-      acc_angle_x = atan(acc_y / sqrt(pow(acc_x, 2) + pow(acc_z, 2))) * 180.0 / math.pi;
-      acc_angle_y = atan(-acc_x / sqrt(pow(acc_y, 2) + pow(acc_z, 2))) * 180.0 / math.pi;
+      acc_angle_x = atan2(acc_y, sqrt(pow(acc_x, 2) + pow(acc_z, 2))) * 180.0 / M_PI;
+      acc_angle_y = atan2(-acc_x, sqrt(pow(acc_y, 2) + pow(acc_z, 2))) * 180.0 / M_PI;
       acc_angle_z = 0;
     }
 };
@@ -72,7 +69,7 @@ class IMU_6DOF : public IMU_3DOF {
     float gyro_bias_x, gyro_bias_y, gyro_bias_z = 0.0;
 
   public:
-    IMU_6DOF(double pin_scl, double pin_sda): IMU_3DOF(pin_scl, pin_sda) {};
+    IMU_6DOF(): {};
 
     void setup(){
       IMU_3DOF::setup(); // Call the setup function of the base class
