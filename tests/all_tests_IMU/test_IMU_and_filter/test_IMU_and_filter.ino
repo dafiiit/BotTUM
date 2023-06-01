@@ -13,6 +13,7 @@ int c = 0;
 // Gyroscope bias estimation variables
 const int numSamples = 200;
 float gyroBiasX = 0.0, gyroBiasY = 0.0, gyroBiasZ = 0.0;
+float accBiasX=0.0, accBiasY=0.0, accBiasZ=0.0;
 
 void setup() {
   Serial.begin(115200);
@@ -51,10 +52,28 @@ void setup() {
 
     delay(3); // Add a small delay between samples
   }
+//Perform accelerometer bias estimation
+  for (int i = 0; i < numSamples; i++)
+   {
+    Wire.beginTransmission(MPU);
+    Wire.write(0x3B);
+    Wire.endTransmission(false);
+    Wire.requestFrom(MPU, 6, true);
+    AccX = (Wire.read() << 8 | Wire.read())/4096.0;
+    AccY = (Wire.read() << 8 | Wire.read())/4096.0;
+    AccZ = (Wire.read() << 8 | Wire.read())/4096.0;
+    accBiasX += AccX;
+    accBiasY += AccY;
+    accBiasZ += AccZ;
 
+    delay(3);
+   }
   gyroBiasX /= numSamples;
   gyroBiasY /= numSamples;
   gyroBiasZ /= numSamples;
+  accBiasX /= numSamples;
+  accBiasY /= numSamples;
+  accBiasZ /= numSamples;
 } 
 void loop() {
   // Read accelerometer data
@@ -66,7 +85,9 @@ void loop() {
   AccX = (Wire.read() << 8 | Wire.read())/4096.0;
   AccY = (Wire.read() << 8 | Wire.read())/4096.0;
   AccZ = (Wire.read() << 8 | Wire.read())/4096.0;
-
+  AccX -= accBiasX;
+  AccY -= accBiasY;
+  AccZ -= accBiasZ+1;
   // Convert accelerometer values to degrees
   accAngleX = atan(AccY / sqrt(pow(AccX, 2) + pow(AccZ, 2))) * 180.0 / PI;
   accAngleY = atan(-AccX / sqrt(pow(AccY, 2) + pow(AccZ, 2))) * 180.0 / PI;
