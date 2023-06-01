@@ -35,15 +35,18 @@ public:
   void loop() {
     if (!client.connected()) {
       reconnect();
+      Serial.print(client.state());
     }
     client.loop();
   }
 
   void publishMessage(const char* topic, const char* message) {
     if (client.connected()) {
-      client.publish(topic, message);
+      // Publish the message with QoS 2
+      client.publish(topic, reinterpret_cast<const uint8_t*>(message), strlen(message), true);
     }
   }
+
 
 private:
   const char* mqttServer = "test.mosquitto.org";

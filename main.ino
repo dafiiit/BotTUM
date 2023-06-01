@@ -23,15 +23,8 @@ void setup(){
 }
 
 float lastPublishTime = 0;
-
-void loop() {
+void loop(){
   mqtt_wifi.loop();
-  // Increase the frequency of client.loop() calls
-  for (int i = 0; i < 5; i++) {
-    mqtt_wifi.loop();
-    // Add any other time-sensitive operations here
-    delay(10); // Small delay between each client.loop() call
-  }
   
   // Überprüfe, ob 0,5 Sekunden seit dem letzten Publish vergangen sind
   if (millis() - lastPublishTime >= 2000) {

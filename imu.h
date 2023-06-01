@@ -1,170 +1,131 @@
-#include "datentypen.h"
-//deklaration
-#ifndef IMU_H
-#define IMU_H
-class IMU {
+#include <Wire.h>
+#include <Arduino.h>
+#include <math.h>
+
+#ifndef imu_3DOF_H
+#define imu_3DOF_H
+class IMU_3DOF {
   private: 
-    double x;
-    double y;
-    double z;
-    double pin_SCL;
-    double pin_SCA;
+    const int mpu = 0x68; // MPU6050 I2C address
+    float acc_x, acc_y, acc_z = 0.0;
+    float acc_angle_x, acc_angle_y, acc_angle_z = 0.0; 
+    float roll_x, pitch_y, yaw_z = 0.0; // was ist der Unterschied zum Winkel obendrüber?
+    double pin_scl;
+    double pin_sda;
+    float elapsed_time, current_time, previous_time = 0;
+    int c = 0; // bitte hilfreicher bennen
   
   public:
-    IMU(double x, double y, double z, double pin_SCL, double pin_SCA);
-    void imu_setup();
-};
+    IMU_3DOF(double pin_scl, double pin_sda): pin_scl(pin_scl), pin_sda(pin_sda) {}; // Konstruktor
+    void setup(){
+      Wire.begin();
+      Wire.beginTransmission(mpu);
+      Wire.write(0x6B);
+      Wire.write(0x00);
+      Wire.endTransmission(true);
 
+      // Configure Accelerometer Sensitivity - Full Scale Range (default +/- 2g)
+      Wire.beginTransmission(mpu);
+      Wire.write(0x1C);
+      Wire.write(0x10);
+      Wire.endTransmission(true);
+
+      // Configure Gyro Sensitivity - Full Scale Range (default +/- 250deg/s)
+      Wire.beginTransmission(mpu);
+      Wire.write(0x1B);
+      Wire.write(0x10);
+      Wire.endTransmission(true);
+      delay(20);
+    };
+    void loop(){
+      previous_time = current_time;
+      current_time = millis();
+      elapsed_time = (current_time - previous_time) / 1000.0;
+
+      // Read accelerometer data
+      Wire.beginTransmission(mpu);
+      Wire.write(0x3B);
+      Wire.endTransmission(false);
+      Wire.requestFrom(mpu, 6, true);
+
+      acc_x = (Wire.read() << 8 | Wire.read());
+      acc_y = (Wire.read() << 8 | Wire.read());
+      acc_z = (Wire.read() << 8 | Wire.read());
+
+      // Convert accelerometer values to degrees
+      acc_angle_x = atan(acc_y / sqrt(pow(acc_x, 2) + pow(acc_z, 2))) * 180.0 / math.pi;
+      acc_angle_y = atan(-acc_x / sqrt(pow(acc_y, 2) + pow(acc_z, 2))) * 180.0 / math.pi;
+      acc_angle_z = 0;
+    }
+};
 #endif
 
 #ifndef IMU_6DOF_H
 #define IMU_6DOF_H
-class IMU_6DOF : public IMU {
+class IMU_6DOF : public IMU_3DOF {
   private: 
-    double gyro_x;
-    double gyro_y;
-    double gyro_z;
+    float gyro_delta_x, gyro_delta_y, gyro_delta_z = 0.0;
+    float gyro_angle_x, gyro_angle_y, gyro_angle_z = 0.0;
+
+    // Gyroscope bias estimation variables
+    const int num_samples = 200;
+    float gyro_bias_x, gyro_bias_y, gyro_bias_z = 0.0;
+
   public:
-      IMU_6DOF(double x, double y, double z, double gyro_x, double gyro_y, double gyro_z, double pin_SCL, double pin_SCA);
-};
-#endif
+    IMU_6DOF(double pin_scl, double pin_sda): IMU_3DOF(pin_scl, pin_sda) {};
 
-#ifndef IMU_9DOF_H
-#define IMU_9DOF_H
-class IMU_9DOF : public IMU_6DOF {
-    private: 
-        double mag_x;
-        double mag_y;
-        double mag_z;
-    
-    public:
-        IMU_9DOF(double x, double y, double z, double gyro_x, double gyro_y, double gyro_z, double mag_x, double mag_y, double mag_z, , double pin_SCL, double pin_SCA);
-};
-#endif
+    void setup(){
+      IMU_3DOF::setup(); // Call the setup function of the base class
 
+      // Perform gyro bias estimation
+      for (int i = 0; i < num_samples; i++) {
+        Wire.beginTransmission(mpu);
+        Wire.write(0x43);
+        Wire.endTransmission(false);
+        Wire.requestFrom(mpu, 6, true);
 
-//implementierung
-// Hier implementieren wir die Klasse IMU mit den privaten Attributen x, y und z
-const int IMU_pin_SCL = 22;
-const int IMU_pin_SCA = 21;
-const int IMU_baudrate = 9600;
-const int IMU_pin_pullup = 19;
-const int IMU_pin_output = 2;
-//Register Map:
-#define ADXL345 0x53 //Adress chosen by grounding SDO
-#define DATAx0 0x32
-#define DATAx1 0x33
-#define DATAy0 0x34
-#define DATAy1 0x35
-#define DATAz0 0x36
-#define DATAz1 0x37
-#define POWER_CTL 0x2D
-#define DATA_FORMAT 0x31
-#define FULLRES_2g B00001000
-#define FULLRES_16g B00001011
-#define WRITE 0xA6
-#define READ 0xA7
-IMU::IMU(double x, double y, double z, double pin_SCL, double pin_SCA) {
-  this->x = x;
-  this->y = y;
-  this->z = z;
-  this->pin_SCL = IMU_pin_SCL;
-  this->pin_SCA = IMU_pin_SCA;
-}
-void imu_setup(){
-  Serial.begin(IMU_baudrate);
-  Serial.println();         
-  Serial.println();         
-  Serial.println("Start");
-  delay(5);
-  Wire.begin(esp32_SDA, esp32_SCL, 100000);       //Warum 100000???
+        gyro_delta_x = (Wire.read() << 8 | Wire.read()) / 131;
+        gyro_delta_y = (Wire.read() << 8 | Wire.read()) / 131;
+        gyro_delta_z = (Wire.read() << 8 | Wire.read()) / 131;
 
-  pinMode(IMU_pin_pullup, INPUT_PULLUP); 
-  pinMode(IMU_pin_output, OUTPUT);           
-  attachInterrupt(digitalPinToInterrupt(19),)
+        gyro_bias_x += gyro_delta_x;
+        gyro_bias_y += gyro_delta_y;
+        gyro_bias_z += gyro_delta_z;
 
-  //Setup power management  
+        delay(3); // Add a small delay between samples
+      }
 
-  Wire.beginTransmission(ADXL345);
-  Wire.write(POWER_CTL);
-  Wire.write(8); //15 to binary: 1111, corresponds to 3200Hz data rate and 1600Hz Bandwidth
-  Wire.endTransmission(true);
-  Serial.println("Powermode & BW_RATE written");
-  delay(20);
-
-  //Setup range
-
-  Wire.beginTransmission(ADXL345);
-  Wire.write(DATA_FORMAT);
-  Wire.write(FULLRES_2g);
-  Wire.endTransmission(true);
-  Serial.println("Range set to 2g");
-  delay(20);
-
-  //
-
-  Serial.println("Setup complete");
-  delay(1000);
-}
-void imu_loop(){
-  byte buff[2];
- 
-  Wire.beginTransmission(ADXL345);
-  Wire.write(DATAx1);
-  Wire.endTransmission();
-  Wire.requestFrom(ADXL345, num, true);
-  int n = 0;
-
-  while(Wire.available())
-    {
-
-      buff[n] = Wire.read();
-      n++;    
+      gyro_bias_x /= num_samples;
+      gyro_bias_y /= num_samples;
+      gyro_bias_z /= num_samples;
     }
-  
-  Wire.beginTransmission(ADXL345);
-  Wire.write(DATAx0);
-  Wire.endTransmission();
-  Wire.requestFrom(ADXL345, num, true);
+    void loop(){
+      IMU_3DOF::loop(); // Call the loop function of the base class
 
-  while(Wire.available())
-  {
-    buff[n]=Wire.read();
-    n++;
-  }
-  //Refer to fig.49 of Datasheet
-  //Format Datatype from byte to 10bit int number
+      // Read gyroscope data
+      Wire.beginTransmission(mpu);
+      Wire.write(0x43);
+      Wire.endTransmission(false);
+      Wire.requestFrom(mpu, 6, true);
 
-  Wire.endTransmission();
+      gyro_delta_x = (Wire.read() << 8 | Wire.read()) / 131;
+      gyro_delta_y = (Wire.read() << 8 | Wire.read()) / 131;
+      gyro_delta_z = (Wire.read() << 8 | Wire.read()) / 131;
 
-  DATA=(int16_t)(buff[0]<<8|buff[1]);
+      // Apply gyro bias compensation
+      gyro_delta_x -= gyro_bias_x;
+      gyro_delta_y -= gyro_bias_y;
+      gyro_delta_z -= gyro_bias_z;
 
-  /*
-  if(abs(DATA-lastDATA)>=250)
-  {
-    err++;
-    Serial.print("Error caught, n° ");
-    Serial.print(err);
-    Serial.print("  ");
-    Serial.print(DATA-lastDATA);
-    Serial.println();
-    }  
-  lastDATA=DATA;
-  */
-  Serial.println(DATA);
-  delay(10); //100Hz data rate
-}
+      // Update gyro angles
+      gyro_angle_x += ((gyro_delta_x + gyro_angle_x) * elapsed_time )/2;
+      gyro_angle_y += ((gyro_delta_y + gyro_angle_y) * elapsed_time )/2;
+      gyro_angle_z += ((gyro_delta_z + gyro_angle_z) * elapsed_time )/2;
 
-// Hier implementieren wir die Klasse IMU_6DOF mit den privaten Attributen gyro_x, gyro_y und gyro_z
-IMU_6DOF::IMU_6DOF(double x, double y, double z, double gyro_x, double gyro_y, double gyro_z, double pin_SCL, double pin_SCA) : IMU(x, y, z, pin_SCL, pin_SCA) {
-  this->gyro_x = gyro_x;
-  this->gyro_y = gyro_y;
-  this->gyro_z = gyro_z;
-}
-
-// Hier implementieren wir die Klasse IMU_9DOF mit den privaten Attributen mag_x, mag_y und mag_z
-IMU_9DOF::IMU_9DOF(double x, double y, double z, double gyro_x, double gyro_y, double gyro_z, double mag_x, double mag_y, double mag_z, double pin_SCL, double pin_SCA) : IMU_6DOF(x, y, z, gyro_x, gyro_y, gyro_z, pin_SCL, pin_SCA) {
-  this->mag_x = mag_x;
-  this->mag_y = mag_y;
-  this->mag_z = mag_z;
-}
+      // Complementary filter - combine accelerometer and gyro angles
+      roll_x = 0.96 * gyro_angle_x + 0.04 * acc_angle_x;
+      pitch_y = 0.96 * gyro_angle_y + 0.04 * acc_angle_y;
+      yaw_z = gyro_angle_z;
+    }
+};
+#endif

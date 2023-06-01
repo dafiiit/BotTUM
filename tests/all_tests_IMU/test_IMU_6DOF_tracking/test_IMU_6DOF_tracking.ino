@@ -109,7 +109,7 @@ void loop() {
   sensors_event_t a, g, temp;
   mpu.getEvent(&a, &g, &temp);
 
-  /* Integrate acceleration to obtain velocity */
+  /* Integrate acceleration to obtain velocity 
   unsigned long currentTime = millis();
   float deltaTime = (currentTime - lastUpdateTime) / 1000.0; // Convert milliseconds to seconds
   lastUpdateTime = currentTime;
@@ -134,6 +134,7 @@ void loop() {
   velocityZ += (accelerationZ + prevAccelerationZ) * deltaTime / 2.0;
   positionZ += (velocityZ + prevVelocityZ) * deltaTime / 2.0;
   prevVelocityZ = velocityZ;
+    */
 
   /* Print out the values */
   Serial.print("Acceleration X: ");
@@ -143,7 +144,7 @@ void loop() {
   Serial.print(", Z: ");
   Serial.print(accelerationZ);
   Serial.println(" m/s^2");
-
+/*
   Serial.print("Velocity X: ");
   Serial.print(velocityX);
   Serial.print(", Y: ");
@@ -159,7 +160,7 @@ void loop() {
   Serial.print(", Z: ");
   Serial.print(positionZ);
   Serial.println(" m");
-
+*/
   Serial.print("Rotation X: ");
   Serial.print(g.gyro.x);
   Serial.print(", Y: ");
@@ -167,10 +168,15 @@ void loop() {
   Serial.print(", Z: ");
   Serial.print(g.gyro.z);
   Serial.println(" rad/s");
-
+/*
   Serial.print("Temperature: ");
   Serial.print(temp.temperature);
   Serial.println(" degC");
+*/
+//Ich will die  Winkel berechnen
+  float angle_calc_x = (atan2(a.acceleration.x, a.acceleration.z) * 180) / PI;
+  float angle_calc_y = (atan2(a.acceleration.y, a.acceleration.z) * 180) / PI;
+  float angle_calc_z = (atan2(a.acceleration.x, a.acceleration.y) * 180) / PI;
 
   Serial.println("");
   delay(500);
