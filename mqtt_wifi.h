@@ -1,21 +1,21 @@
-//Diese Datei funktioniert so, daher eher nicht ändern
-
-#ifndef MQTT_HELPER_H
-#define MQTT_HELPER_H
+#ifndef mqtt_wifi_H
+#define mqtt_wifi_H
 
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include "secure.h"
 
-class MQTTHelper {
+extern void callback(char* topic, byte* payload, unsigned int length); // Deklariere die Callback-Funktion
+
+class mqtt_wifi {
 public:
-  MQTTHelper() : client(espClient) {}
+  mqtt_wifi() : client(espClient) {}
   void setup() {
-    Serial.begin(115200);
-
-    // Connect to Wi-Fi
     WiFi.begin(ssid, password);
+    // Connect to Wi-Fi
     while (WiFi.status() != WL_CONNECTED) {
-      delay(1000);
+      //WiFi.begin(ssid, password);
+      delay(2000);
       Serial.println("Connecting to WiFi...");
     }
     Serial.println("Connected to WiFi");
@@ -39,16 +39,6 @@ public:
     client.loop();
   }
 
-  static void callback(char* topic, byte* payload, unsigned int length) {
-    // Handle incoming messages
-    String message = "";
-    for (int i = 0; i < length; i++) {
-      message += (char)payload[i];
-    }
-    Serial.print("Received message: ");
-    Serial.println(message);
-  }
-
   void publishMessage(const char* topic, const char* message) {
     if (client.connected()) {
       client.publish(topic, message);
@@ -57,19 +47,23 @@ public:
 
 private:
   const char* mqttServer = "test.mosquitto.org";
-  const int mqttPort = 1883; 
+  const int mqttPort = 1883;
   const char* mqttClientId = "ESP32Client";
-  const char* ssid = "DaSpot";
-  const char* password = "david2003";
 
   WiFiClient espClient;
   PubSubClient client;
+
   void reconnect() {
     while (!client.connected()) {
-    Serial.println("Connecting to MQTT broker...");
+    //Serial.println("Connecting to MQTT broker...");
     if (client.connect(mqttClientId)) {
-      Serial.println("Connected to MQTT broker");
-      //client.subscribe(mqttTopic);  // Subscribe to the topic (optional)
+      //Serial.println("Connected to MQTT broker");
+
+      // hier allen Toppics subscriben
+      client.subscribe("RoboTUM/steuerung");  
+      client.subscribe("RoboTUM/pid_values");
+      client.subscribe("RoboTUM/on_off");
+
     } else {
       Serial.print("Failed, rc=");
       Serial.print(client.state());
@@ -79,5 +73,16 @@ private:
     }
   }
 };
+
+// Define the free function outside the class
+void callback(char* topic, byte* payload, unsigned int length) {
+  // Handle incoming messages
+  String message = "";
+  for (int i = 0; i < length; i++) {
+    message += (char)payload[i];
+  }
+  Serial.print("Received message: ");
+  Serial.println(message);
+}
 
 #endif

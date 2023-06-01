@@ -1,26 +1,45 @@
 //Dies ist das Hauptprogramm für die Ansteuerung des Quadrats
 #include <iostream>
-#include <cmath>
-//#include <Wire.h>
-#include <tgmath.h>
-#include <Serial.h>
+//#include <cmath>
+#include <Wire.h>
+//#include <tgmath.h>
+#include <Arduino.h>
 
 //#include "datentypen.h"
-#include 
-#include "hall.h"
+#include "mqtt_wifi.h"
+//#include "hall.h"
 //#include "imu.h"
 //#include "quadrat.h"
 
-HALLSENSOR hallSensor;   // Instanziierung der HALLSENSOR-Klasse
+//HALLSENSOR hallSensor;   // Instanziierung der HALLSENSOR-Klasse
+mqtt_wifi mqtt_wifi;
+
 
 void setup(){
-  Serial.begin(hallSensor.abtastrate);
-  hallSensor.hall_setup();   // Initialisierung des Hallsensors
-  //IMU.imu_setup()
+  Serial.begin(115200);
+  //hallSensor.hall_setup();   // Initialisierung des Hallsensors
+  mqtt_wifi.setup();
+
 }
 
-void loop() {
+float lastPublishTime = 0;
 
+void loop() {
+  mqtt_wifi.loop();
+  // Increase the frequency of client.loop() calls
+  for (int i = 0; i < 5; i++) {
+    mqtt_wifi.loop();
+    // Add any other time-sensitive operations here
+    delay(10); // Small delay between each client.loop() call
+  }
+  
+  // Überprüfe, ob 0,5 Sekunden seit dem letzten Publish vergangen sind
+  if (millis() - lastPublishTime >= 2000) {
+    mqtt_wifi.publishMessage("RoboTUM/steuerung", "Hello World");
+    lastPublishTime = millis(); // Aktualisiere den Zeitpunkt des letzten Publish
+  }
+
+  /*
   float rpm = hallSensor.get_hall_rpm();      // RPM abrufen
   float phiPS = hallSensor.get_hall_phi_punkt_scheibe();  // PhiPS abrufen
 
@@ -28,5 +47,6 @@ void loop() {
   Serial.println(phiPS);
   Serial.print("RPM: ");
   Serial.println(rpm);   // RPM ausgeben
+  */
 
 }
