@@ -37,7 +37,8 @@ void setup() {
   delay(20);
 
   // Perform gyro bias estimation
-  for (int i = 0; i < numSamples; i++) {
+  for (int i = 0; i < numSamples; i++) 
+  {
     Wire.beginTransmission(MPU);
     Wire.write(0x43);
     Wire.endTransmission(false);
@@ -52,7 +53,7 @@ void setup() {
 
     delay(3); // Add a small delay between samples
   }
-//Perform accelerometer bias estimation
+  //Perform accelerometer bias estimation
   for (int i = 0; i < numSamples; i++)
    {
     Wire.beginTransmission(MPU);
@@ -68,15 +69,19 @@ void setup() {
 
     delay(3);
    }
+
   gyroBiasX /= numSamples;
   gyroBiasY /= numSamples;
   gyroBiasZ /= numSamples;
   accBiasX /= numSamples;
   accBiasY /= numSamples;
   accBiasZ /= numSamples;
-} 
+}
+
 void loop() {
+  
   // Read accelerometer data
+  
   Wire.beginTransmission(MPU);
   Wire.write(0x3B);
   Wire.endTransmission(false);
@@ -88,10 +93,19 @@ void loop() {
   AccX -= accBiasX;
   AccY -= accBiasY;
   AccZ -= accBiasZ-1;
+  Serial.print(AccX);
+  Serial.print("/");
+  Serial.print(AccY);
+  Serial.print("/");
+  Serial.print(AccZ);
+  Serial.print("/");
   // Convert accelerometer values to degrees
   accAngleX = atan(AccY / sqrt(pow(AccX, 2) + pow(AccZ, 2))) * 180.0 / PI;
   accAngleY = atan(-AccX / sqrt(pow(AccY, 2) + pow(AccZ, 2))) * 180.0 / PI;
-
+  /*Serial.print(accAngleX);
+  Serial.print("/");
+  Serial.println(accAngleY);*/
+  
   // Read gyroscope data
   Wire.beginTransmission(MPU);
   Wire.write(0x43);
@@ -100,25 +114,42 @@ void loop() {
   GyroX = (Wire.read() << 8 | Wire.read()) / 131.0;
   GyroY = (Wire.read() << 8 | Wire.read()) / 131.0;
   GyroZ = (Wire.read() << 8 | Wire.read()) / 131.0;
-
+/*Serial.print(GyroX);
+Serial.print("/");
+Serial.print(GyroY);
+Serial.print("/");
+Serial.print(GyroZ);
+Serial.print("/"); */
   // Apply gyro bias compensation
   GyroX -= gyroBiasX;
   GyroY -= gyroBiasY;
   GyroZ -= gyroBiasZ;
-
+/*Serial.print("mit korrigierten Bias:");
+Serial.print(GyroX);
+Serial.print("/");
+Serial.print(GyroY);
+Serial.print("/");
+Serial.print(GyroZ);*/
+  // Update gyro angles
   previousTime = currentTime;
   currentTime = millis();
   elapsedTime = (currentTime - previousTime) / 1000.0;
-  // Update gyro angles
   gyroAngleX += GyroX * elapsedTime;
-  gyroAngleX_map=gyroAngleX*4;
+  gyroAngleX_map= gyroAngleX*4;
   gyroAngleY += GyroY * elapsedTime;
   gyroAngleY_map=gyroAngleY*4;
   yaw += GyroZ * elapsedTime;
 
+  /*Serial.print("Gyro angle:");
+  Serial.print(gyroAngleX_map);
+  Serial.print("/");
+  Serial.print(gyroAngleY_map);
+  Serial.print("/");
+  Serial.println(yaw); */
+
   // Complementary filter - combine accelerometer and gyro angles
-  roll = 0.96 * gyroAngleX + 0.04 * accAngleX;
-  pitch = 0.96 * gyroAngleY + 0.04 * accAngleY;
+  roll = 0.96 * gyroAngleX_map + 0.04 * accAngleX;
+  pitch = 0.96 * gyroAngleY_map + 0.04 * accAngleY;
 
   Serial.print("Roll: ");
   Serial.print(roll);
@@ -126,4 +157,5 @@ void loop() {
   Serial.print(pitch);
   Serial.print("   Yaw: ");
   Serial.println(yaw);
+
 }
