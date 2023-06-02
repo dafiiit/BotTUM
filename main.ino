@@ -5,22 +5,25 @@
 //#include <tgmath.h>
 #include <Arduino.h>
 
-//#include "datentypen.h"
+#include "datentypen.h"
 #include "mqtt_wifi.h"
 //#include "hall.h"
 #include "imu.h"
 //#include "quadrat.h"
 
+//Instanziierung der Klassen
 //HALLSENSOR hallSensor;   // Instanziierung der HALLSENSOR-Klasse
 mqtt_wifi mqtt_wifi;
 IMU_6DOF imu;
-
 
 void setup(){
   Serial.begin(115200);
   //hallSensor.hall_setup();   // Initialisierung des Hallsensors
   mqtt_wifi.setup();
   imu.setup();
+
+  //zum setzen des Ab Position der imu (hier beispielhaft auf 1,2,3 gesetzt)
+  imu.position = Eigen::Vector3d(1.0, 2.0, 3.0);
 
 }
 

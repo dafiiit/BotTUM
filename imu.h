@@ -1,6 +1,7 @@
 #include <Wire.h>
 #include <Arduino.h>
 #include <math.h>
+#include "datentypen.h"
 
 #ifndef imu_3DOF_H
 #define imu_3DOF_H
@@ -33,6 +34,29 @@ class IMU_3DOF {
       Wire.write(0x10);
       Wire.endTransmission(true);
       delay(20);
+
+      //Perform accelerometer bias estimation
+      for (int i = 0; i < numSamples; i++)
+        {
+        Wire.beginTransmission(MPU);
+        Wire.write(0x3B);
+        Wire.endTransmission(false);
+        Wire.requestFrom(MPU, 6, true);
+        acc_x = (Wire.read() << 8 | Wire.read())/4096.0;
+        acc_y = (Wire.read() << 8 | Wire.read())/4096.0;
+        acc_z = (Wire.read() << 8 | Wire.read())/4096.0;
+        acc_bias_x += acc_x;
+        acc_bias_y += acc_y;
+        acc_bias_z += acc_z;
+        }
+
+      acc_bias_x /= numSamples;
+      acc_bias_y /= numSamples;
+      acc_bias_z /= numSamples;
+
+    delay(3);
+   }
+
     };
     void loop(){
       previous_time = current_time;
@@ -45,9 +69,13 @@ class IMU_3DOF {
       Wire.endTransmission(false);
       Wire.requestFrom(mpu, 6, true);
 
-      acc_x = (Wire.read() << 8 | Wire.read());
-      acc_y = (Wire.read() << 8 | Wire.read());
-      acc_z = (Wire.read() << 8 | Wire.read());
+      acc_x = (Wire.read() << 8 | Wire.read())/4096.0;
+      acc_y = (Wire.read() << 8 | Wire.read())/4096.0;
+      acc_z = (Wire.read() << 8 | Wire.read())/4096.0;
+
+      acc_x -= acc_bias_x;
+      acc_y -= acc_bias_y;
+      acc_z -= acc_bias_z-1;
 
       // Convert accelerometer values to degrees
       acc_angle_x = atan2(acc_y, sqrt(pow(acc_x, 2) + pow(acc_z, 2))) * 180.0 / M_PI;
@@ -61,13 +89,16 @@ class IMU_3DOF {
 #define IMU_6DOF_H
 class IMU_6DOF : public IMU_3DOF {
   private: 
-    float gyro_delta_x, gyro_delta_y, gyro_delta_z = 0.0;
+    float gyro_omega_x, gyro_omega_y, gyro_omega_z = 0.0;
     float gyro_angle_x, gyro_angle_y, gyro_angle_z = 0.0;
 
     // Gyroscope bias estimation variables
     const int num_samples = 200;
     float gyro_bias_x, gyro_bias_y, gyro_bias_z = 0.0;
 
+    //Postitionsvektor der imu
+    Eigen::Vector3d position(0.0, 0.0, 0.0); //Abstand der IMU vom Boden in x,y,z Richtung
+    
   public:
     IMU_6DOF(): {};
 
@@ -81,13 +112,13 @@ class IMU_6DOF : public IMU_3DOF {
         Wire.endTransmission(false);
         Wire.requestFrom(mpu, 6, true);
 
-        gyro_delta_x = (Wire.read() << 8 | Wire.read()) / 131;
-        gyro_delta_y = (Wire.read() << 8 | Wire.read()) / 131;
-        gyro_delta_z = (Wire.read() << 8 | Wire.read()) / 131;
+        gyro_omega_x = (Wire.read() << 8 | Wire.read()) / 131;
+        gyro_omega_y = (Wire.read() << 8 | Wire.read()) / 131;
+        gyro_omega_z = (Wire.read() << 8 | Wire.read()) / 131;
 
-        gyro_bias_x += gyro_delta_x;
-        gyro_bias_y += gyro_delta_y;
-        gyro_bias_z += gyro_delta_z;
+        gyro_bias_x += gyro_omega_x;
+        gyro_bias_y += gyro_omega_y;
+        gyro_bias_z += gyro_omega_z;
 
         delay(3); // Add a small delay between samples
       }
@@ -105,19 +136,19 @@ class IMU_6DOF : public IMU_3DOF {
       Wire.endTransmission(false);
       Wire.requestFrom(mpu, 6, true);
 
-      gyro_delta_x = (Wire.read() << 8 | Wire.read()) / 131;
-      gyro_delta_y = (Wire.read() << 8 | Wire.read()) / 131;
-      gyro_delta_z = (Wire.read() << 8 | Wire.read()) / 131;
+      gyro_omega_x = (Wire.read() << 8 | Wire.read()) / 131;
+      gyro_omega_y = (Wire.read() << 8 | Wire.read()) / 131;
+      gyro_omega_z = (Wire.read() << 8 | Wire.read()) / 131;
 
       // Apply gyro bias compensation
-      gyro_delta_x -= gyro_bias_x;
-      gyro_delta_y -= gyro_bias_y;
-      gyro_delta_z -= gyro_bias_z;
+      gyro_omega_x -= gyro_bias_x;
+      gyro_omega_y -= gyro_bias_y;
+      gyro_omega_z -= gyro_bias_z;
 
       // Update gyro angles
-      gyro_angle_x += ((gyro_delta_x + gyro_angle_x) * elapsed_time )/2;
-      gyro_angle_y += ((gyro_delta_y + gyro_angle_y) * elapsed_time )/2;
-      gyro_angle_z += ((gyro_delta_z + gyro_angle_z) * elapsed_time )/2;
+      gyro_angle_x += ((gyro_omega_x + gyro_angle_x) * elapsed_time )/2;
+      gyro_angle_y += ((gyro_omega_y + gyro_angle_y) * elapsed_time )/2;
+      gyro_angle_z += ((gyro_omega_z + gyro_angle_z) * elapsed_time )/2;
 
       // Complementary filter - combine accelerometer and gyro angles
       roll_x = 0.96 * gyro_angle_x + 0.04 * acc_angle_x;

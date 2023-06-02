@@ -11,19 +11,25 @@ class INERTIA {
     INERTIA(const Eigen::Matrix3d& inertiaMatrix) : inertia(inertiaMatrix) {}
 };
 #endif
-
+/*
 //enthält die Position in relation zum Ursprung
 #ifndef POSITION_H
 #define POSITION_H
-class POSITION {
+class VEKTOR {
   private:
-    double x;
-    double y;
+    float x;
+    float y;
+    float z;
   public: 
-    POSITION(double x, double y);
+    VEKTOR(float x, float y, float z) : x(x), y(y), z(z) {};
 }
 #endif
 
+kann durch 
+Eigen::Vector3d pos(0.0, 0.0, 0.0);
+ersetzt werden
+
+*/
 #ifndef ROUTE_H
 #define ROUTE_H
 class ROUTE{
@@ -50,10 +56,4 @@ class ROUTENELEMENT{
     void setRoutenelement();   //sorgt dafür, dass immmer nur ein Bool Wert True wird. Benötigt noch eine übergabe.
 }
 #endif
-
-// Hier implementieren wir die Klasse Position
-POSITION::POSITION(double x, double y){
-  this->x = x;
-  this->y = y;
-}
 
