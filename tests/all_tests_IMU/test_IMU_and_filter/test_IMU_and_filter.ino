@@ -87,7 +87,7 @@ void loop() {
   AccZ = (Wire.read() << 8 | Wire.read())/4096.0;
   AccX -= accBiasX;
   AccY -= accBiasY;
-  AccZ -= accBiasZ+1;
+  AccZ -= accBiasZ-1;
   // Convert accelerometer values to degrees
   accAngleX = atan(AccY / sqrt(pow(AccX, 2) + pow(AccZ, 2))) * 180.0 / PI;
   accAngleY = atan(-AccX / sqrt(pow(AccY, 2) + pow(AccZ, 2))) * 180.0 / PI;
