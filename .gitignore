@@ -2,3 +2,4 @@
 //z.B. Systemdateien wie .DS_Store (wird auf Mac automatisch angelegt)
 .DS_Store
 secure.h
+platformio.ini
