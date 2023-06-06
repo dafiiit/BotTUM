@@ -4,21 +4,19 @@
 #include <Wire.h>
 //#include <tgmath.h>
 #include <Arduino.h>
-#include <ArduinoEigen.h>
 #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
-//include <Eigen.h>
 //#include "datentypen.h"
 //#include "mqtt_wifi.h"
 //#include "hall.h"
-//#include "imu.h"
+#include "imu.h"
 //#include "quadrat.h"
-#include "imu_with_libary.h"
+//#include "imu_with_libary.h"
 
 //Instanziierung der Klassen
 //HALLSENSOR hallSensor;   // Instanziierung der HALLSENSOR-Klasse
 //mqtt_wifi mqtt_wifi;
-//IMU_6DOF imu;
+IMU_6DOF imu;
 
 void setup(){
   Serial.begin(115200);
@@ -26,8 +24,8 @@ void setup(){
   //hallSensor.hall_setup();   // Initialisierung des Hallsensors
   mqtt_wifi.setup();
   */
-  //imu.setup();
-  imu_6DOF_with_lib.setup();
+  imu.setup();
+  //imu_6DOF_with_lib().setup();
 
   //zum setzen des Ab Position der imu (hier beispielhaft auf 1,2,3 gesetzt)
   //imu.position = Eigen::Vector3d(1.0, 2.0, 3.0);
@@ -39,6 +37,7 @@ void loop(){
   //alle loops der Klassen aufrufen
   //mqtt_wifi.loop();
   imu.loop();
+  //imu_6DOF_with_lib().loop();
   
   if (millis() - lastPublishTime >= 2000) {
     /*
@@ -53,28 +52,15 @@ void loop(){
     Serial.print(imu.get_acc_y());
     Serial.print("   acc_z: ");
     Serial.println(imu.get_acc_z());
-
-    Serial.print("gyro_omega_x: ");
+    
+    // Ausgabe der Winkel
+    Serial.print("gyro_x: ");
     Serial.print(imu.get_gyro_omega_x());
-    Serial.print("   gyro_omega_y: ");
+    Serial.print("   gyro_y: ");
     Serial.print(imu.get_gyro_omega_y());
-    Serial.print("   gyro_omega_z: ");
+    Serial.print("   gyro_z: ");
     Serial.println(imu.get_gyro_omega_z());
-
-    /* Serial.print("gyro_bias_x: ");
-    Serial.print(imu.get_acc_bias_x());
-    Serial.print("   gyro_bias_y: ");
-    Serial.print(imu.get_acc_bias_y());
-    Serial.print("   gyro_bias_z: ");
-    Serial.println(imu.get_acc_bias_z()); */
-
-    Serial.print("Roll: ");
-    Serial.print(imu.get_roll_x());
-    Serial.print("   Pitch: ");
-    Serial.print(imu.get_pitch_y());
-    Serial.print("   Yaw: ");
-    Serial.println(imu.get_yaw_z());
-
+    
     lastPublishTime = millis(); // Aktualisiere den Zeitpunkt des letzten Publish
   }
 
