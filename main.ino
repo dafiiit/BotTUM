@@ -17,8 +17,8 @@
 IMU_6DOF imu;
 
 void setup(){
-  /*
   Serial.begin(115200);
+  /*
   //hallSensor.hall_setup();   // Initialisierung des Hallsensors
   mqtt_wifi.setup();
   */
@@ -42,6 +42,27 @@ void loop(){
     */
 
     // Ausgabe der Winkel
+    Serial.print("acc_x: ");
+    Serial.print(imu.get_acc_x());
+    Serial.print("   acc_y: ");
+    Serial.print(imu.get_acc_y());
+    Serial.print("   acc_z: ");
+    Serial.println(imu.get_acc_z());
+
+    Serial.print("gyro_omega_x: ");
+    Serial.print(imu.get_gyro_omega_x());
+    Serial.print("   gyro_omega_y: ");
+    Serial.print(imu.get_gyro_omega_y());
+    Serial.print("   gyro_omega_z: ");
+    Serial.println(imu.get_gyro_omega_z());
+
+    Serial.print("gyro_bias_x: ");
+    Serial.print(imu.get_acc_bias_x());
+    Serial.print("   gyro_bias_y: ");
+    Serial.print(imu.get_acc_bias_y());
+    Serial.print("   gyro_bias_z: ");
+    Serial.println(imu.get_acc_bias_z());
+
     Serial.print("Roll: ");
     Serial.print(imu.get_roll_x());
     Serial.print("   Pitch: ");

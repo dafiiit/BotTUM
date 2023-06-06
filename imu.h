@@ -16,6 +16,19 @@ class IMU_3DOF {
     int num_samples = 200;
   public:
     IMU_3DOF() {}; // Konstruktor
+
+    float get_acc_x() const { return acc_x; }
+    float get_acc_y() const { return acc_y; }
+    float get_acc_z() const { return acc_z; }
+
+    float get_acc_angle_x() const { return acc_angle_x; }
+    float get_acc_angle_y() const { return acc_angle_y; }
+    float get_acc_angle_z() const { return acc_angle_z; }
+
+    float get_acc_bias_x() const { return acc_bias_x; }
+    float get_acc_bias_y() const { return acc_bias_y; }
+    float get_acc_bias_z() const { return acc_bias_z; }
+
     void setup(){
       Wire.begin();
       Wire.beginTransmission(mpu);
@@ -103,7 +116,15 @@ class IMU_6DOF : public IMU_3DOF {
     
   public:
     IMU_6DOF() {};
-  
+
+    float get_gyro_omega_x() const { return gyro_omega_x; }
+    float get_gyro_omega_y() const { return gyro_omega_y; }
+    float get_gyro_omega_z() const { return gyro_omega_z; }
+
+    float get_gyro_angle_x() const { return gyro_angle_x; }
+    float get_gyro_angle_y() const { return gyro_angle_y; }
+    float get_gyro_angle_z() const { return gyro_angle_z; }
+
     float get_roll_x() const { return roll_x; }
     float get_pitch_y() const { return pitch_y; }
     float get_yaw_z() const { return yaw_z; }
