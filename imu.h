@@ -14,6 +14,8 @@ class IMU_3DOF {
 
     float acc_bias_x, acc_bias_y, acc_bias_z = 0.0;
     int num_samples = 200;
+
+    float acc_lsb = 4096.0; //+-8g
   public:
     IMU_3DOF() {}; // Konstruktor
 
@@ -32,22 +34,15 @@ class IMU_3DOF {
     void setup(){
       Wire.begin();
       Wire.beginTransmission(mpu);
-      Wire.write(0x6B);
-      Wire.write(0x00);
+      Wire.write(0x6B);     //Power management aufwachen
+      Wire.write(0x00);     
       Wire.endTransmission(true);
 
       // Configure Accelerometer Sensitivity - Full Scale Range (default +/- 2g)
       Wire.beginTransmission(mpu);
-      Wire.write(0x1C);
-      Wire.write(0x10);
+      Wire.write(0x1C);     //
+      Wire.write(0x10);     //
       Wire.endTransmission(true);
-
-      // Configure Gyro Sensitivity - Full Scale Range (default +/- 250deg/s)
-      Wire.beginTransmission(mpu);
-      Wire.write(0x1B);
-      Wire.write(0x10);
-      Wire.endTransmission(true);
-      delay(20);
 
       //Perform accelerometer bias estimation
       for (int i = 0; i < num_samples; i++)
@@ -55,11 +50,10 @@ class IMU_3DOF {
         Wire.beginTransmission(mpu);
         Wire.write(0x3B);
         Wire.endTransmission(false);
-        //Wire.requestFrom(mpu, 6, true);
         Wire.requestFrom(static_cast<uint16_t>(mpu), static_cast<size_t>(6), true);
-        acc_x = (Wire.read() << 8 | Wire.read())/4096.0;
-        acc_y = (Wire.read() << 8 | Wire.read())/4096.0;
-        acc_z = (Wire.read() << 8 | Wire.read())/4096.0;
+        acc_x = (Wire.read() << 8 | Wire.read())/acc_lsb;
+        acc_y = (Wire.read() << 8 | Wire.read())/acc_lsb;
+        acc_z = (Wire.read() << 8 | Wire.read())/acc_lsb;
         acc_bias_x += acc_x;
         acc_bias_y += acc_y;
         acc_bias_z += acc_z;
@@ -84,9 +78,9 @@ class IMU_3DOF {
 
       //Wire.requestFrom(mpu, 6, true);
 
-      acc_x = (Wire.read() << 8 | Wire.read())/4096.0;
-      acc_y = (Wire.read() << 8 | Wire.read())/4096.0;
-      acc_z = (Wire.read() << 8 | Wire.read())/4096.0;
+      acc_x = (Wire.read() << 8 | Wire.read())/acc_lsb;
+      acc_y = (Wire.read() << 8 | Wire.read())/acc_lsb;
+      acc_z = (Wire.read() << 8 | Wire.read())/acc_lsb;
 
       acc_x -= acc_bias_x;
       acc_y -= acc_bias_y;
@@ -113,6 +107,8 @@ class IMU_6DOF : public IMU_3DOF {
 
     //Postitionsvektor der imu
     //Eigen::Vector3d position(0.0, 0.0, 0.0); //Abstand der IMU vom Boden in x,y,z Richtung
+
+    float gyro_lsb = 32.8; // =1000°/s
     
   public:
     IMU_6DOF() {};
@@ -132,6 +128,13 @@ class IMU_6DOF : public IMU_3DOF {
     void setup(){
       IMU_3DOF::setup(); // Call the setup function of the base class
 
+      // Configure Gyro Sensitivity - Full Scale Range (default +/- 1000deg/s)
+      Wire.beginTransmission(mpu);
+      Wire.write(0x1B);
+      Wire.write(0x10);
+      Wire.endTransmission(true);
+      delay(20);
+
       // Perform gyro bias estimation
       for (int i = 0; i < num_samples; i++) {
         Wire.beginTransmission(mpu);
@@ -140,9 +143,9 @@ class IMU_6DOF : public IMU_3DOF {
         //Wire.requestFrom(mpu, 6, true);
         Wire.requestFrom(static_cast<uint16_t>(mpu), static_cast<size_t>(6), true);
 
-        gyro_omega_x = (Wire.read() << 8 | Wire.read()) / 131;
-        gyro_omega_y = (Wire.read() << 8 | Wire.read()) / 131;
-        gyro_omega_z = (Wire.read() << 8 | Wire.read()) / 131;
+        gyro_omega_x = (Wire.read() << 8 | Wire.read()) / gyro_lsb;
+        gyro_omega_y = (Wire.read() << 8 | Wire.read()) / gyro_lsb;
+        gyro_omega_z = (Wire.read() << 8 | Wire.read()) / gyro_lsb;
 
         gyro_bias_x += gyro_omega_x;
         gyro_bias_y += gyro_omega_y;
@@ -166,9 +169,9 @@ class IMU_6DOF : public IMU_3DOF {
 
       //Wire.requestFrom(mpu, 6, true);
 
-      gyro_omega_x = (Wire.read() << 8 | Wire.read()) / 131;
-      gyro_omega_y = (Wire.read() << 8 | Wire.read()) / 131;
-      gyro_omega_z = (Wire.read() << 8 | Wire.read()) / 131;
+      gyro_omega_x = (Wire.read() << 8 | Wire.read()) / gyro_lsb;
+      gyro_omega_y = (Wire.read() << 8 | Wire.read()) / gyro_lsb;
+      gyro_omega_z = (Wire.read() << 8 | Wire.read()) / gyro_lsb;
 
       // Apply gyro bias compensation
       gyro_omega_x -= gyro_bias_x;

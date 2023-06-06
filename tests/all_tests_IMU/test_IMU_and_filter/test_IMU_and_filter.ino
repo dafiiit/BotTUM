@@ -1,4 +1,3 @@
-//dies ist der Code von Zlatina
 #include <Wire.h>
 
 const int MPU = 0x68; // MPU6050 I2C address
@@ -43,9 +42,9 @@ void setup() {
     Wire.write(0x43);
     Wire.endTransmission(false);
     Wire.requestFrom(MPU, 6, true);
-    GyroX = (Wire.read() << 8 | Wire.read()) / 131.0;
-    GyroY = (Wire.read() << 8 | Wire.read()) / 131.0;
-    GyroZ = (Wire.read() << 8 | Wire.read()) / 131.0;
+    GyroX = (Wire.read() << 8 | Wire.read()) / 32.8;
+    GyroY = (Wire.read() << 8 | Wire.read()) / 32.8;
+    GyroZ = (Wire.read() << 8 | Wire.read()) / 32.8;
 
     gyroBiasX += GyroX;
     gyroBiasY += GyroY;
@@ -98,7 +97,7 @@ void loop() {
   Serial.print(AccY);
   Serial.print("/");
   Serial.print(AccZ);
-  Serial.print("/");
+  Serial.println("/");
   // Convert accelerometer values to degrees
   accAngleX = atan(AccY / sqrt(pow(AccX, 2) + pow(AccZ, 2))) * 180.0 / PI;
   accAngleY = atan(-AccX / sqrt(pow(AccY, 2) + pow(AccZ, 2))) * 180.0 / PI;
@@ -157,5 +156,6 @@ Serial.print(GyroZ);*/
   Serial.print(pitch);
   Serial.print("   Yaw: ");
   Serial.println(yaw);
-
+  
+  delay(2000);
 }
