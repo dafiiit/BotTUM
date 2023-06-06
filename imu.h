@@ -107,7 +107,7 @@ class IMU_6DOF : public IMU_3DOF {
     float get_gyro_omega(int richtung) const { return gyro_omega[richtung]; }
     float get_gyro_angle(int richtung) const { return gyro_angle[richtung]; }
     float get_gyro(int richtung) const { return gyro_complementary_angle[richtung]; }
-    float get_fancy_angle(int richtung) const { return gyro_complementary_angle[richtung]; }
+    float get_fancy_angle(int richtung) const { return gyro_fancy_angle[richtung]; }
 
     void setup(){
       IMU_3DOF::setup(); // Call the setup function of the base class
@@ -182,9 +182,9 @@ class IMU_6DOF : public IMU_3DOF {
       acc_g[1] = acc[1] - acc_zentral[1];
       acc_g[2] = acc[2] - acc_zentral[2];
 
-      fancy_angle[0] = atan2(acc_g[1], sqrt(pow(acc_g[0], 2) + pow(acc_g[2], 2))) * 180.0 / M_PI;
-      fancy_angle[1] = atan2(-acc_g[0], sqrt(pow(acc_g[1], 2) + pow(acc_g[2], 2))) * 180.0 / M_PI;
-      fancy_angle[2] = gyro_angle[2];
+      gyro_fancy_angle[0] = atan2(acc_g[1], sqrt(pow(acc_g[0], 2) + pow(acc_g[2], 2))) * 180.0 / M_PI;
+      gyro_fancy_angle[1] = atan2(-acc_g[0], sqrt(pow(acc_g[1], 2) + pow(acc_g[2], 2))) * 180.0 / M_PI;
+      gyro_fancy_angle[2] = gyro_angle[2];
     }
 };
 #endif
