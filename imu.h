@@ -48,14 +48,10 @@ class IMU_3DOF {
         acc[0] = (Wire.read() << 8 | Wire.read())/acc_lsb;
         acc[1] = (Wire.read() << 8 | Wire.read())/acc_lsb;
         acc[2] = (Wire.read() << 8 | Wire.read())/acc_lsb;
-        acc_bias[0] += acc[0];
-        acc_bias[1] += acc[1];
-        acc_bias[2] += acc[2];
-        }
 
-      acc_bias[0] /= num_samples;
-      acc_bias[1] /= num_samples;
-      acc_bias[2] /= num_samples;
+        acc_bias = vec_add(acc_bias, acc);
+        }
+      acc_bias = vec_mult(acc_bias, 1.0/num_samples);
 
     delay(3);
    }
@@ -76,9 +72,8 @@ class IMU_3DOF {
       acc[1] = (Wire.read() << 8 | Wire.read())/acc_lsb;
       acc[2] = (Wire.read() << 8 | Wire.read())/acc_lsb;
 
-      acc[0] -= acc_bias[0];
-      acc[1] -= acc_bias[1];
-      acc[2] -= acc_bias[2]-1;
+      acc = vec_add(acc, -acc_bias);
+      acc[2] -= -1;
 
       // Convert accelerometer values to degrees
       acc_angle[0] = atan2(acc[1], sqrt(pow(acc[0], 2) + pow(acc[2], 2))) * 180.0 / M_PI;
@@ -196,7 +191,7 @@ class IMU_6DOF : public IMU_3DOF {
       //normierung des kompensierten Gravitationsvektors
       float norm = sqrt(pow(acc_g[0], 2) + pow(acc_g[1], 2) + pow(acc_g[2], 2));
       float acc = 1 - norm;
-      acc
+
       acc_g[0] = acc_g[0]/norm;
       acc_g[1] = acc_g[1]/norm;
       acc_g[2] = acc_g[2]/norm;

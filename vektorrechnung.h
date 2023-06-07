@@ -6,8 +6,8 @@
 #define vektorrechnung_H
 
 // Funktion zum Addieren von Vektoren
-std::vector<double> vec_add(const std::vector<double>& v1, const std::vector<double>& v2) {
-    std::vector<double> result;
+std::vector<float> vec_add(const std::vector<float>& v1, const std::vector<float>& v2) {
+    std::vector<float> result;
     if (v1.size() != v2.size()) {
         std::cout << "Fehler: Die Vektoren müssen die gleiche Länge haben." << std::endl;
         return result;
@@ -19,9 +19,19 @@ std::vector<double> vec_add(const std::vector<double>& v1, const std::vector<dou
     return result;
 }
 
+// Funktion zum elementweisen addieren eines Vektors mit einem Skalar
+std::vector<float> vec_add_scalar(const std::vector<float>& v, float scalar) {
+    std::vector<float> result;
+    result.resize(v.size());
+    for (size_t i = 0; i < v.size(); ++i) {
+        result[i] = v[i] + scalar;
+    }
+    return result;
+}
+
 // Funktion zum Multiplizieren von Vektoren
-std::vector<double> vec_multiply(const std::vector<double>& v1, const std::vector<double>& v2) {
-    std::vector<double> result;
+std::vector<float> vec_multiply(const std::vector<float>& v1, const std::vector<float>& v2) {
+    std::vector<float> result;
     if (v1.size() != v2.size()) {
         std::cout << "Fehler: Die Vektoren müssen die gleiche Länge haben." << std::endl;
         return result;
@@ -34,8 +44,8 @@ std::vector<double> vec_multiply(const std::vector<double>& v1, const std::vecto
 }
 
 // Funktion zum Skalieren von Vektoren
-std::vector<double> vec_scale(const std::vector<double>& v, double factor) {
-    std::vector<double> result;
+std::vector<float> vec_scale(const std::vector<float>& v, float factor) {
+    std::vector<float> result;
     result.resize(v.size());
     for (size_t i = 0; i < v.size(); ++i) {
         result[i] = v[i] * factor;
@@ -44,8 +54,8 @@ std::vector<double> vec_scale(const std::vector<double>& v, double factor) {
 }
 
 // Funktion zum Berechnen der Länge eines Vektors
-double vec_length(const std::vector<double>& v) {
-    double result = 0;
+float vec_length(const std::vector<float>& v) {
+    float result = 0;
     for (size_t i = 0; i < v.size(); ++i) {
         result += v[i] * v[i];
     }
@@ -53,8 +63,8 @@ double vec_length(const std::vector<double>& v) {
 }
 
 // Funktion zum Berechnen des Skalarprodukts von Vektoren
-double vec_scalar_product(const std::vector<double>& v1, const std::vector<double>& v2) {
-    double result = 0;
+float vec_scalar_product(const std::vector<float>& v1, const std::vector<float>& v2) {
+    float result = 0;
     if (v1.size() != v2.size()) {
         std::cout << "Fehler: Die Vektoren müssen die gleiche Länge haben." << std::endl;
         return result;
@@ -65,20 +75,21 @@ double vec_scalar_product(const std::vector<double>& v1, const std::vector<doubl
     return result;
 }
 
+
 // Funktion zum Berechnen des Winkels zwischen zwei Vektoren
-double vec_angle(const std::vector<double>& v1, const std::vector<double>& v2) {
-    double result = 0;
+float vec_angle(const std::vector<float>& v1, const std::vector<float>& v2) {
+    float result = 0;
     if (v1.size() != v2.size()) {
         std::cout << "Fehler: Die Vektoren müssen die gleiche Länge haben." << std::endl;
         return result;
     }
-    result = scalarProduct(v1, v2) / (lengthVector(v1) * lengthVector(v2));
-    return acos(result) * 180 / PI;
+    result = vec_scalar_product(v1, v2) / (vec_length(v1) * vec_length(v2));
+    return acos(result) * 180 / M_PI;
 }
 
 // Funktion zum Berechnen des Kreuzprodukts von Vektoren
-std::vector<double> vec_cross_product(const std::vector<double>& v1, const std::vector<double>& v2) {
-    std::vector<double> result;
+std::vector<float> vec_cross_product(const std::vector<float>& v1, const std::vector<float>& v2) {
+    std::vector<float> result;
     if (v1.size() != v2.size()) {
         std::cout << "Fehler: Die Vektoren müssen die gleiche Länge haben." << std::endl;
         return result;
