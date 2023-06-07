@@ -1,6 +1,8 @@
 #include <Wire.h>
 #include <Arduino.h>
 #include <math.h>
+#include <vector>
+#include "vektorrechnung.h"
 
 #ifndef imu_3DOF_H
 #define imu_3DOF_H
@@ -95,9 +97,13 @@ class IMU_6DOF : public IMU_3DOF {
     std::vector<float> position = {0.0 , 0.0, 0.0};
     std::vector<float> gyro_omega = {0.0 , 0.0 , 0.0};
     std::vector<float> gyro_angle = {0.0 , 0.0 , 0.0};
-    std::vector<float> gyro_complementary_angle = {0.0 , 0.0 , 0.0};
-    std::vector<float> gyro_fancy_angle = {0.0 , 0.0 , 0.0};
+    std::vector<float> complementary_angle = {0.0 , 0.0 , 0.0};
+    std::vector<float> acc_zentral = {0.0 , 0.0 , 0.0};
+    std::vector<float> acc_g = {0.0 , 0.0 , 0.0};
+    std::vector<float> fancy_angle = {0.0 , 0.0 , 0.0};
     std::vector<float> gyro_bias = {0.0 , 0.0 , 0.0};
+    std::vector<float> acc_dreh = {0.0 , 0.0 , 0.0};
+
 
     float gyro_lsb = 32.8; // =1000°/s
     
@@ -106,8 +112,8 @@ class IMU_6DOF : public IMU_3DOF {
 
     float get_gyro_omega(int richtung) const { return gyro_omega[richtung]; }
     float get_gyro_angle(int richtung) const { return gyro_angle[richtung]; }
-    float get_gyro(int richtung) const { return gyro_complementary_angle[richtung]; }
-    float get_fancy_angle(int richtung) const { return gyro_fancy_angle[richtung]; }
+    float get_complementary_angle(int richtung) const { return complementary_angle[richtung]; }
+    float get_fancy_angle(int richtung) const { return fancy_angle[richtung]; }
 
     void setup(){
       IMU_3DOF::setup(); // Call the setup function of the base class
@@ -168,23 +174,43 @@ class IMU_6DOF : public IMU_3DOF {
       gyro_angle[2] += ((gyro_omega[2] + gyro_angle[2]) * elapsed_time )/2;
       
       // Complementary filter - combine accelerometer and gyro angles
-      gyro_complementary_angle[0] = 0.96 * gyro_angle[0] + 0.04 * acc_angle[0];
-      gyro_complementary_angle[1] = 0.96 * gyro_angle[1] + 0.04 * acc_angle[1];
-      gyro_complementary_angle[2] = gyro_angle[2];
+      complementary_angle[0] = 0.96 * gyro_angle[0] + 0.04 * acc_angle[0];
+      complementary_angle[1] = 0.96 * gyro_angle[1] + 0.04 * acc_angle[1];
+      complementary_angle[2] = gyro_angle[2];
 
-      //noch einbauen: setzen mancher gyro_omega werte auf 0 je nachdem um welche Achse wir rotieren
+      //Zentrifugalbeschläunigung berechnung mir a = w x (w x r)
+      acc_zentral[0] = gyro_omega[1]*(gyro_omega[0] * position[1]- gyro_omega[1]*position[0]) - gyro_omega[2]*(gyro_omega[2]*position[0] - gyro_omega[0]*position[2]);
+      acc_zentral[1] = gyro_omega[2]*(gyro_omega[1] * position[2]- gyro_omega[2]*position[1]) - gyro_omega[0]*(gyro_omega[0]*position[1] - gyro_omega[1]*position[0]);
+      acc_zentral[2] = gyro_omega[0]*(gyro_omega[2] * position[0]- gyro_omega[0]*position[2]) - gyro_omega[1]*(gyro_omega[1]*position[2] - gyro_omega[2]*position[1]);
 
-      acc_zentral[0] = gyro_omega[1] (gyro_omega[0] * position[1]- gyro_omega[1]*position[0]) - gyro_omega[2]*(gyro_omega[2]*position[0] - gyro_omega[0]*position[2]);
-      acc_zentral[1] = gyro_omega[2] (gyro_omega[1] * position[2]- gyro_omega[2]*position[1]) - gyro_omega[0]*(gyro_omega[0]*position[1] - gyro_omega[1]*position[0]);
-      acc_zentral[2] = gyro_omega[0] (gyro_omega[2] * position[0]- gyro_omega[0]*position[2]) - gyro_omega[1]*(gyro_omega[1]*position[2] - gyro_omega[2]*position[1]);
+      //Drehbeschleunigung berechnung mit a = w x r
+      acc_dreh[0] = gyro_omega[1]*position[2] - gyro_omega[2]*position[1];
+      acc_dreh[1] = gyro_omega[2]*position[0] - gyro_omega[0]*position[2];
+      acc_dreh[2] = gyro_omega[0]*position[1] - gyro_omega[1]*position[0];
 
-      acc_g[0] = acc[0] - acc_zentral[0];
-      acc_g[1] = acc[1] - acc_zentral[1];
-      acc_g[2] = acc[2] - acc_zentral[2];
+      //Berechnung des kompensierten Gravitationsvektors
+      acc_g[0] = acc[0] - acc_zentral[0] - acc_dreh[0];
+      acc_g[1] = acc[1] - acc_zentral[1] - acc_dreh[1];
+      acc_g[2] = acc[2] - acc_zentral[2] - acc_dreh[2];
 
-      gyro_fancy_angle[0] = atan2(acc_g[1], sqrt(pow(acc_g[0], 2) + pow(acc_g[2], 2))) * 180.0 / M_PI;
-      gyro_fancy_angle[1] = atan2(-acc_g[0], sqrt(pow(acc_g[1], 2) + pow(acc_g[2], 2))) * 180.0 / M_PI;
-      gyro_fancy_angle[2] = gyro_angle[2];
+      //normierung des kompensierten Gravitationsvektors
+      float norm = sqrt(pow(acc_g[0], 2) + pow(acc_g[1], 2) + pow(acc_g[2], 2));
+      float acc = 1 - norm;
+      acc
+      acc_g[0] = acc_g[0]/norm;
+      acc_g[1] = acc_g[1]/norm;
+      acc_g[2] = acc_g[2]/norm;
+
+      //umwandeln in Quaterionen
+      float q0 = sqrt(1 + acc_g[0] + acc_g[1] + acc_g[2])/2;
+      float q1 = (acc_g[2] - acc_g[1])/(4*q0);
+      float q2 = (acc_g[0] - acc_g[2])/(4*q0);
+      float q3 = (acc_g[1] - acc_g[0])/(4*q0);
+
+      //Berechnung der Winkel mit dem kompensierten Gravitationsvektor
+      fancy_angle[0] = atan2(acc_g[1], sqrt(pow(acc_g[0], 2) + pow(acc_g[2], 2))) * 180.0 / M_PI;
+      fancy_angle[1] = atan2(-acc_g[0], sqrt(pow(acc_g[1], 2) + pow(acc_g[2], 2))) * 180.0 / M_PI;
+      fancy_angle[2] = gyro_angle[2];
     }
 };
 #endif

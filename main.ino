@@ -47,20 +47,43 @@ void loop(){
 
     // Ausgabe der Winkel
     Serial.print("acc_x: ");
-    Serial.print(imu.get_acc_x());
+    Serial.print(imu.get_acc(0));
     Serial.print("   acc_y: ");
-    Serial.print(imu.get_acc_y());
+    Serial.print(imu.get_acc(1));
     Serial.print("   acc_z: ");
-    Serial.println(imu.get_acc_z());
+    Serial.println(imu.get_acc(2));
     
     // Ausgabe der Winkel
     Serial.print("gyro_x: ");
-    Serial.print(imu.get_gyro_omega_x());
+    Serial.print(imu.get_gyro_omega(0));
     Serial.print("   gyro_y: ");
-    Serial.print(imu.get_gyro_omega_y());
+    Serial.print(imu.get_gyro_omega(1));
     Serial.print("   gyro_z: ");
-    Serial.println(imu.get_gyro_omega_z());
+    Serial.println(imu.get_gyro_omega(2));
+
+    // Ausgabe der Winkel
+    Serial.print("acc_angle_x: ");
+    Serial.print(imu.get_acc_angle(0));
+    Serial.print("   acc_angle_y: ");
+    Serial.print(imu.get_acc_angle(1));
+    Serial.print("   acc_angle_z: ");
+    Serial.println(imu.get_acc_angle(2));
+
+    // Ausgabe der Winkel
+    Serial.print("complementary_angle_x: ");
+    Serial.print(imu.get_complementary_angle(0));
+    Serial.print("   complementary_angle_y: ");
+    Serial.print(imu.get_complementary_angle(1));
+    Serial.print("   complementary_angle_z: ");
+    Serial.println(imu.get_complementary_angle(2));
     
+    // Ausgabe der Winkel
+    Serial.print("fancy_angle_x: ");
+    Serial.print(imu.get_fancy_angle(0));
+    Serial.print("   fancy_angle_y: ");
+    Serial.print(imu.get_fancy_angle(1));
+    Serial.print("   fancy_angle_z: ");
+    Serial.println(imu.get_fancy_angle(2));
     lastPublishTime = millis(); // Aktualisiere den Zeitpunkt des letzten Publish
   }
 
