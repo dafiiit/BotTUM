@@ -19,6 +19,20 @@ std::vector<float> vec_add(const std::vector<float>& v1, const std::vector<float
     return result;
 }
 
+//Funktion zum Subtrahieren von Vektoren
+std::vector<float> vec_subtract(const std::vector<float>& v1, const std::vector<float>& v2) {
+    std::vector<float> result;
+    if (v1.size() != v2.size()) {
+        std::cout << "Fehler: Die Vektoren müssen die gleiche Länge haben." << std::endl;
+        return result;
+    }
+    result.resize(v1.size());
+    for (size_t i = 0; i < v1.size(); ++i) {
+        result[i] = v1[i] - v2[i];
+    }
+    return result;
+}
+
 // Funktion zum elementweisen addieren eines Vektors mit einem Skalar
 std::vector<float> vec_add_scalar(const std::vector<float>& v, float scalar) {
     std::vector<float> result;
@@ -43,6 +57,19 @@ std::vector<float> vec_multiply(const std::vector<float>& v1, const std::vector<
     return result;
 }
 
+// Funktion zum Dividieren von Vektoren
+std::vector<float> vec_divide(const std::vector<float>& v1, const std::vector<float>& v2) {
+    std::vector<float> result;
+    if (v1.size() != v2.size()) {
+        std::cout << "Fehler: Die Vektoren müssen die gleiche Länge haben." << std::endl;
+        return result;
+    }
+    result.resize(v1.size());
+    for (size_t i = 0; i < v1.size(); ++i) {
+        result[i] = v1[i] / v2[i];
+    }
+    return result;
+}
 // Funktion zum Skalieren von Vektoren
 std::vector<float> vec_scale(const std::vector<float>& v, float factor) {
     std::vector<float> result;
@@ -104,5 +131,13 @@ std::vector<float> vec_cross_product(const std::vector<float>& v1, const std::ve
     result[2] = v1[0] * v2[1] - v1[1] * v2[0];
     return result;
 }
+
+//Funktion welche den gesamten Vektor mithilfe von Serial print ausgibt. Im Format(Vektorname_Index : Wert)
+void vec_print(const std::vector<float>& v, const std::string& name) {
+    for (size_t i = 0; i < v.size(); ++i) {
+        std::cout << name << "_" << i << ": " << v[i] << std::endl;
+    }
+}
+
 
 #endif

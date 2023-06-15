@@ -51,7 +51,7 @@ class IMU_3DOF {
 
         acc_bias = vec_add(acc_bias, acc);
         }
-      acc_bias = vec_mult(acc_bias, 1.0/num_samples);
+      acc_bias = vec_scale(acc_bias, (1/num_samples));
 
     delay(3);
    }
@@ -72,8 +72,8 @@ class IMU_3DOF {
       acc[1] = (Wire.read() << 8 | Wire.read())/acc_lsb;
       acc[2] = (Wire.read() << 8 | Wire.read())/acc_lsb;
 
-      acc = vec_add(acc, -acc_bias);
-      acc[2] -= -1;
+      acc = vec_subtract(acc, acc_bias);
+      //acc[2] == -1;
 
       // Convert accelerometer values to degrees
       acc_angle[0] = atan2(acc[1], sqrt(pow(acc[0], 2) + pow(acc[2], 2))) * 180.0 / M_PI;
@@ -98,6 +98,7 @@ class IMU_6DOF : public IMU_3DOF {
     std::vector<float> fancy_angle = {0.0 , 0.0 , 0.0};
     std::vector<float> gyro_bias = {0.0 , 0.0 , 0.0};
     std::vector<float> acc_dreh = {0.0 , 0.0 , 0.0};
+    std::vector<float> quaterionen = {0.0 , 0.0 , 0.0};
 
 
     float gyro_lsb = 32.8; // =1000°/s
@@ -109,6 +110,9 @@ class IMU_6DOF : public IMU_3DOF {
     float get_gyro_angle(int richtung) const { return gyro_angle[richtung]; }
     float get_complementary_angle(int richtung) const { return complementary_angle[richtung]; }
     float get_fancy_angle(int richtung) const { return fancy_angle[richtung]; }
+    float get_acc_zentral(int richtung) const { return acc_zentral[richtung]; }
+    float get_acc_g(int richtung) const { return acc_g[richtung]; }
+    float get_gyro_bias(int richtung) const { return gyro_bias[richtung]; }
 
     void setup(){
       IMU_3DOF::setup(); // Call the setup function of the base class
@@ -132,16 +136,11 @@ class IMU_6DOF : public IMU_3DOF {
         gyro_omega[1] = (Wire.read() << 8 | Wire.read()) / gyro_lsb;
         gyro_omega[2] = (Wire.read() << 8 | Wire.read()) / gyro_lsb;
 
-        gyro_bias[0] += gyro_omega[0];
-        gyro_bias[1] += gyro_omega[1];
-        gyro_bias[2] += gyro_omega[2];
+        gyro_bias = vec_subtract(gyro_omega, gyro_bias);
 
         delay(3); // Add a small delay between samples
       }
-
-      gyro_bias[0] /= num_samples;
-      gyro_bias[1] /= num_samples;
-      gyro_bias[2] /= num_samples;
+      gyro_bias = vec_scale(gyro_bias, (1.0/num_samples) );
     }
     void loop(){
       IMU_3DOF::loop(); // Call the loop function of the base class
@@ -159,14 +158,10 @@ class IMU_6DOF : public IMU_3DOF {
       gyro_omega[2] = (Wire.read() << 8 | Wire.read()) / gyro_lsb;
 
       // Apply gyro bias compensation
-      gyro_omega[0] -= gyro_bias[0];
-      gyro_omega[1] -= gyro_bias[1];
-      gyro_omega[2] -= gyro_bias[2];
+      gyro_omega = vec_subtract(gyro_omega, gyro_bias);
 
       // Update gyro angles
-      gyro_angle[0] += ((gyro_omega[0] + gyro_angle[0]) * elapsed_time )/2;
-      gyro_angle[1] += ((gyro_omega[1] + gyro_angle[1]) * elapsed_time )/2;
-      gyro_angle[2] += ((gyro_omega[2] + gyro_angle[2]) * elapsed_time )/2;
+      gyro_angle = vec_add(gyro_angle , vec_scale (vec_add(gyro_omega, gyro_angle), (elapsed_time*0.5)));
       
       // Complementary filter - combine accelerometer and gyro angles
       complementary_angle[0] = 0.96 * gyro_angle[0] + 0.04 * acc_angle[0];
@@ -174,33 +169,22 @@ class IMU_6DOF : public IMU_3DOF {
       complementary_angle[2] = gyro_angle[2];
 
       //Zentrifugalbeschläunigung berechnung mir a = w x (w x r)
-      acc_zentral[0] = gyro_omega[1]*(gyro_omega[0] * position[1]- gyro_omega[1]*position[0]) - gyro_omega[2]*(gyro_omega[2]*position[0] - gyro_omega[0]*position[2]);
-      acc_zentral[1] = gyro_omega[2]*(gyro_omega[1] * position[2]- gyro_omega[2]*position[1]) - gyro_omega[0]*(gyro_omega[0]*position[1] - gyro_omega[1]*position[0]);
-      acc_zentral[2] = gyro_omega[0]*(gyro_omega[2] * position[0]- gyro_omega[0]*position[2]) - gyro_omega[1]*(gyro_omega[1]*position[2] - gyro_omega[2]*position[1]);
+      acc_zentral = vec_cross_product(gyro_omega, vec_cross_product(gyro_omega, position)); 
 
       //Drehbeschleunigung berechnung mit a = w x r
-      acc_dreh[0] = gyro_omega[1]*position[2] - gyro_omega[2]*position[1];
-      acc_dreh[1] = gyro_omega[2]*position[0] - gyro_omega[0]*position[2];
-      acc_dreh[2] = gyro_omega[0]*position[1] - gyro_omega[1]*position[0];
+      acc_dreh = vec_cross_product(gyro_omega, position);
 
       //Berechnung des kompensierten Gravitationsvektors
-      acc_g[0] = acc[0] - acc_zentral[0] - acc_dreh[0];
-      acc_g[1] = acc[1] - acc_zentral[1] - acc_dreh[1];
-      acc_g[2] = acc[2] - acc_zentral[2] - acc_dreh[2];
+      acc_g = vec_subtract(acc, vec_add(acc_zentral, acc_dreh));
 
       //normierung des kompensierten Gravitationsvektors
-      float norm = sqrt(pow(acc_g[0], 2) + pow(acc_g[1], 2) + pow(acc_g[2], 2));
-      float acc = 1 - norm;
-
-      acc_g[0] = acc_g[0]/norm;
-      acc_g[1] = acc_g[1]/norm;
-      acc_g[2] = acc_g[2]/norm;
+      acc_g = vec_scale(acc_g, (1/vec_length(acc_g)));
 
       //umwandeln in Quaterionen
-      float q0 = sqrt(1 + acc_g[0] + acc_g[1] + acc_g[2])/2;
-      float q1 = (acc_g[2] - acc_g[1])/(4*q0);
-      float q2 = (acc_g[0] - acc_g[2])/(4*q0);
-      float q3 = (acc_g[1] - acc_g[0])/(4*q0);
+      quaterionen[0] = sqrt(1 + acc_g[0] + acc_g[1] + acc_g[2])/2;
+      quaterionen[1] = (acc_g[2] - acc_g[1])/(4*quaterionen[0]);
+      quaterionen[2] = (acc_g[0] - acc_g[2])/(4*quaterionen[0]);
+      quaterionen[3] = (acc_g[1] - acc_g[0])/(4*quaterionen[0]);
 
       //Berechnung der Winkel mit dem kompensierten Gravitationsvektor
       fancy_angle[0] = atan2(acc_g[1], sqrt(pow(acc_g[0], 2) + pow(acc_g[2], 2))) * 180.0 / M_PI;
